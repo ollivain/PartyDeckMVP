@@ -37,7 +37,7 @@ export default function GameScreen() {
   };
 
   const handleCamera = () => {
-    Alert.alert('Camera', 'Capture the moment — coming in the next update!', [{ text: 'Got it' }]);
+    router.push('/camera');
   };
 
   if (isDeckEmpty) {

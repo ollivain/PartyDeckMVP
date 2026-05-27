@@ -12,7 +12,9 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: Colors.bg },
           animation: 'default',
         }}
-      />
+      >
+        <Stack.Screen name="camera" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+      </Stack>
       <StatusBar style="light" />
     </GestureHandlerRootView>
   );

@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -108,6 +108,7 @@ export default function RecapScreen() {
   const played = useSessionStore(s => s.played);
   const startedAt = useSessionStore(s => s.startedAt);
   const endedAt = useSessionStore(s => s.endedAt);
+  const mediaUris = useSessionStore(s => s.mediaUris);
   const reset = useSessionStore(s => s.reset);
 
   const duration = startedAt && endedAt ? endedAt - startedAt : 0;
@@ -226,17 +227,42 @@ export default function RecapScreen() {
         <View style={styles.section}>
           <View style={styles.sectionRow}>
             <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>MEDIA MOMENTS</Text>
-            <View style={styles.comingSoonPill}>
-              <Text style={styles.comingSoonText}>SOON</Text>
-            </View>
-          </View>
-          <View style={styles.mediaGrid}>
-            {[0, 1, 2, 3].map(i => (
-              <View key={i} style={styles.mediaSlot}>
-                <Ionicons name="camera-outline" size={20} color={Colors.textDim} />
+            {mediaUris.length > 0 ? (
+              <View style={styles.mediaCountPill}>
+                <Text style={styles.mediaCountText}>{mediaUris.length}</Text>
               </View>
-            ))}
+            ) : (
+              <View style={styles.comingSoonPill}>
+                <Text style={styles.comingSoonText}>SOON</Text>
+              </View>
+            )}
           </View>
+
+          {mediaUris.length > 0 ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.thumbRow}
+            >
+              {mediaUris.map((uri, i) => (
+                <View key={i} style={styles.thumbWrap}>
+                  <Image
+                    source={{ uri }}
+                    style={styles.thumb}
+                    resizeMode="cover"
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.mediaGrid}>
+              {[0, 1, 2, 3].map(i => (
+                <View key={i} style={styles.mediaSlot}>
+                  <Ionicons name="camera-outline" size={20} color={Colors.textDim} />
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Play Again */}
@@ -434,7 +460,39 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
 
-  // Media moments
+  // Media moments — thumbnails
+  thumbRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingRight: Spacing.sm,
+  },
+  thumbWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    backgroundColor: Colors.surface2,
+  },
+  thumb: {
+    width: 100,
+    height: 100,
+  },
+  mediaCountPill: {
+    backgroundColor: Colors.accentBg,
+    borderRadius: Radius.full,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+  },
+  mediaCountText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.accent,
+    letterSpacing: 0.3,
+  },
+
+  // Media moments — placeholder
   comingSoonPill: {
     backgroundColor: Colors.surface2,
     borderRadius: Radius.full,

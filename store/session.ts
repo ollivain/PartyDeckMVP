@@ -23,6 +23,7 @@ type SessionStore = {
   deck: string[];
   deckIndex: number;
   played: PlayedCard[];
+  mediaUris: string[];
 
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
@@ -31,6 +32,7 @@ type SessionStore = {
   completeCard: () => void;
   skipCard: () => void;
   endGame: () => void;
+  addMedia: (uri: string) => void;
   reset: () => void;
 };
 
@@ -52,6 +54,7 @@ const defaultState = {
   deck: [] as string[],
   deckIndex: 0,
   played: [] as PlayedCard[],
+  mediaUris: [] as string[],
 };
 
 export const useSessionStore = create<SessionStore>((set, get) => ({
@@ -125,6 +128,9 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   },
 
   endGame: () => set({ endedAt: Date.now() }),
+
+  addMedia: (uri: string) =>
+    set(s => ({ mediaUris: [...s.mediaUris, uri] })),
 
   reset: () => set({ ...defaultState }),
 }));
