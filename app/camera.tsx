@@ -116,7 +116,7 @@ export default function CameraScreen() {
           <Ionicons name="camera-outline" size={52} color={Colors.textDim} style={{ marginBottom: Spacing.lg }} />
           <Text style={styles.permTitle}>Camera access denied</Text>
           <Text style={styles.permSub}>
-            Go to Settings → PartyDeck and allow camera access to capture moments.
+            Go to Settings → NiteDeck and allow camera access to capture moments.
           </Text>
           <TouchableOpacity onPress={() => router.back()} style={styles.permSkip}>
             <Text style={styles.permSkipText}>Back to game</Text>
@@ -139,7 +139,7 @@ export default function CameraScreen() {
           </View>
           <Text style={styles.permTitle}>Capture the moment</Text>
           <Text style={styles.permSub}>
-            PartyDeck needs camera access to save party moments to your session recap.
+            NiteDeck needs camera access to save party moments to your session recap.
           </Text>
           <TouchableOpacity style={styles.permBtn} onPress={requestPermission} activeOpacity={0.8}>
             <Text style={styles.permBtnText}>Allow Camera</Text>

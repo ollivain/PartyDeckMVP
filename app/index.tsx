@@ -80,7 +80,7 @@ export default function HomeScreen() {
             adjustsFontSizeToFit
             minimumFontScale={0.7}
           >
-            <Text style={{ color: Colors.text }}>Party</Text>
+            <Text style={{ color: Colors.text }}>Nite</Text>
             <Text style={{ color: Colors.accent }}>Deck</Text>
           </Text>
 

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PartyDeckMVP",
+    "name": "NiteDeck",
     "slug": "PartyDeckMVP",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -30,7 +30,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "PartyDeck uses the camera to capture party moments during your session."
+          "cameraPermission": "NiteDeck uses the camera to capture party moments during your session."
         }
       ],
       [
