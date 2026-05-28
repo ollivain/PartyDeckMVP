@@ -21,9 +21,10 @@ import type { MediaMoment, MediaType } from '@/store/session';
 const MAX_ZOOM = 0.5;
 const ZOOM_1X = 0;
 const ZOOM_2X = 0.12;
+const PHOTO_QUALITY = 1;
 const MAX_VIDEO_SECONDS = 10;
 const MAX_VIDEO_FILE_SIZE = 25_000_000;
-const VIDEO_BITRATE = 8_000_000;
+const VIDEO_BITRATE = 12_000_000;
 const VIDEO_QUALITY: VideoQuality = '1080p';
 const VIDEO_CODEC: VideoCodec = 'avc1';
 type CaptureMode = MediaType;
@@ -117,7 +118,7 @@ export default function CameraScreen() {
     if (!cameraRef.current || capturing || recording) return;
     setCapturing(true);
     try {
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.75 });
+      const photo = await cameraRef.current.takePictureAsync({ quality: PHOTO_QUALITY });
       if (photo?.uri) {
         setPreview({ uri: photo.uri, mediaType: 'photo', createdAt: Date.now() });
       }
