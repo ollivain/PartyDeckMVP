@@ -21,6 +21,7 @@ export default function GameScreen() {
 
   const currentPlayer = players[currentPlayerIndex];
   const currentCard = deck[deckIndex] ? cardsById[deck[deckIndex]] : undefined;
+  const isCameraCard = currentCard?.type === 'camera';
   const isDeckEmpty = deckIndex >= deck.length;
   const progress = deck.length > 0 ? deckIndex / deck.length : 0;
 
@@ -111,13 +112,26 @@ export default function GameScreen() {
 
         {/* Camera FAB — self-sized, right-aligned between card and actions */}
         <View style={styles.cameraRow}>
+          {isCameraCard && (
+            <View style={styles.cameraHint}>
+              <Text style={styles.cameraHintText}>Tap the camera to save this moment</Text>
+            </View>
+          )}
           <TouchableOpacity
             onPress={handleCamera}
-            style={[styles.cameraFab, { shadowColor: modeCfg.primary, borderColor: modeCfg.border }]}
+            style={[
+              styles.cameraFab,
+              {
+                shadowColor: isCameraCard ? Colors.accent : modeCfg.primary,
+                borderColor: isCameraCard ? Colors.accentBorder : modeCfg.border,
+              },
+              isCameraCard && styles.cameraFabActive,
+            ]}
             activeOpacity={0.75}
             hitSlop={8}
           >
-            <Ionicons name="camera" size={22} color={Colors.text} />
+            <Ionicons name="camera" size={22} color={isCameraCard ? Colors.accent : Colors.text} />
+            {isCameraCard && <Text style={styles.cameraFabLabel}>Capture</Text>}
           </TouchableOpacity>
         </View>
 
@@ -216,7 +230,28 @@ const styles = StyleSheet.create({
   },
   cameraRow: {
     alignSelf: 'flex-end',
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: Spacing.sm,
     marginBottom: Spacing.sm,
+  },
+  cameraHint: {
+    maxWidth: 148,
+    flexShrink: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+    backgroundColor: Colors.accentBg,
+  },
+  cameraHintText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textMuted,
+    lineHeight: 16,
   },
   cameraFab: {
     width: 56,
@@ -230,6 +265,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 5,
+  },
+  cameraFabActive: {
+    width: 116,
+    flexDirection: 'row',
+    gap: 7,
+    borderWidth: 1.5,
+    backgroundColor: Colors.accentBg,
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  cameraFabLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: Colors.accent,
+    letterSpacing: 0.2,
   },
   actions: {
     flexDirection: 'row',
