@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { Image, Modal, PanResponder, ScrollView, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { Alert, Image, Modal, PanResponder, ScrollView, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Sharing from 'expo-sharing';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { Button } from '@/components/ui/Button';
 import { AwardCard } from '@/components/recap/AwardCard';
@@ -302,6 +303,7 @@ type MediaViewerProps = {
 
 function FullscreenMediaViewer({ mediaItems, selectedIndex, onClose, onSelectIndex }: MediaViewerProps) {
   const insets = useSafeAreaInsets();
+  const [isSharing, setIsSharing] = useState(false);
   const selectedMoment = selectedIndex === null ? null : mediaItems[selectedIndex];
   const canGoPrev = selectedIndex !== null && selectedIndex > 0;
   const canGoNext = selectedIndex !== null && selectedIndex < mediaItems.length - 1;
@@ -330,6 +332,31 @@ function FullscreenMediaViewer({ mediaItems, selectedIndex, onClose, onSelectInd
     },
   });
 
+  const shareActiveMoment = async () => {
+    if (!selectedMoment || isSharing) return;
+
+    try {
+      setIsSharing(true);
+      const isAvailable = await Sharing.isAvailableAsync();
+
+      if (!isAvailable) {
+        Alert.alert('Sharing unavailable', 'Sharing is not available on this device.');
+        return;
+      }
+
+      // TODO: Future sharing polish can add Share All Memories and a branded recap poster.
+      await Sharing.shareAsync(selectedMoment.uri, {
+        dialogTitle: 'Share NiteDeck moment',
+        mimeType: selectedMoment.mediaType === 'video' ? 'video/*' : 'image/*',
+        UTI: selectedMoment.mediaType === 'video' ? 'public.movie' : 'public.image',
+      });
+    } catch {
+      Alert.alert('Share failed', 'This moment could not be shared. Try again from the recap.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <Modal
       visible={Boolean(selectedMoment)}
@@ -351,7 +378,15 @@ function FullscreenMediaViewer({ mediaItems, selectedIndex, onClose, onSelectInd
                 </Text>
               </View>
             ) : null}
-            <View style={styles.viewerSpacer} />
+            <TouchableOpacity
+              onPress={shareActiveMoment}
+              disabled={!selectedMoment || isSharing}
+              style={[styles.viewerShareBtn, (!selectedMoment || isSharing) && styles.viewerShareBtnDisabled]}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="share-outline" size={18} color={Colors.text} />
+              <Text style={styles.viewerShareText}>Share</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.viewerContent} {...panResponder.panHandlers}>
@@ -981,8 +1016,26 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     letterSpacing: 0.4,
   },
-  viewerSpacer: {
-    width: 44,
+  viewerShareBtn: {
+    minWidth: 82,
+    height: 44,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 12,
+  },
+  viewerShareBtnDisabled: {
+    opacity: 0.5,
+  },
+  viewerShareText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.text,
   },
   viewerContent: {
     flex: 1,
