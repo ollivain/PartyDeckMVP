@@ -41,7 +41,7 @@ export const wildCards: Card[] = [
   { id: 'wi038', mode: 'wild', type: 'pick', label: 'PICK SOMEONE', text: 'Pick someone to do the next challenge card with you as a duo.', intensity: 2 },
   { id: 'wi039', mode: 'wild', type: 'pick', label: 'PICK SOMEONE', text: 'Choose someone to give a 15-second motivational speech to the group right now.', intensity: 2 },
   { id: 'wi040', mode: 'wild', type: 'camera', label: 'CAMERA MOMENT', text: 'Take a photo of the most suspicious duo in the room right now.', intensity: 2 },
-  { id: 'wi041', mode: 'wild', type: 'camera', label: 'CAMERA MOMENT', text: 'Show the group the most embarrassing photo currently in your camera roll. No hiding it.', intensity: 3 },
+  { id: 'wi041', mode: 'wild', type: 'challenge', label: 'CHALLENGE', text: 'Show the group the most embarrassing photo currently in your camera roll. No hiding it.', intensity: 3 },
   { id: 'wi042', mode: 'wild', type: 'camera', label: 'CAMERA MOMENT', text: 'Take the most ridiculous group selfie you can. It becomes the official photo of tonight.', intensity: 2 },
   { id: 'wi043', mode: 'wild', type: 'camera', label: 'CAMERA MOMENT', text: 'Recreate a famous movie scene as a group photo. Everyone has to be in it.', intensity: 2 },
   { id: 'wi044', mode: 'wild', type: 'camera', label: 'CAMERA MOMENT', text: 'Take a photo of your best dramatic villain face. The group picks the most terrifying one.', intensity: 2 },

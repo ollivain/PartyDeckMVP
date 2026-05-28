@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -12,21 +12,50 @@ import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import type { FlashMode, CameraType } from 'expo-camera';
+import type { CameraType, FlashMode, VideoCodec, VideoQuality } from 'expo-camera';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useSessionStore } from '@/store/session';
+import type { MediaMoment, MediaType } from '@/store/session';
 
 const MAX_ZOOM = 0.5;
 const ZOOM_1X = 0;
 const ZOOM_2X = 0.12;
+const MAX_VIDEO_SECONDS = 10;
+const MAX_VIDEO_FILE_SIZE = 25_000_000;
+const VIDEO_BITRATE = 8_000_000;
+const VIDEO_QUALITY: VideoQuality = '1080p';
+const VIDEO_CODEC: VideoCodec = 'avc1';
+type CaptureMode = MediaType;
+
+function VideoPreview({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, player => {
+    player.loop = true;
+    player.muted = true;
+    player.play();
+  });
+
+  return (
+    <VideoView
+      player={player}
+      style={StyleSheet.absoluteFill}
+      nativeControls={false}
+      contentFit="cover"
+    />
+  );
+}
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [flash, setFlash] = useState<FlashMode>('off');
+  const [torchEnabled, setTorchEnabled] = useState(false);
   const [zoom, setZoom] = useState(0);
+  const [captureMode, setCaptureMode] = useState<CaptureMode>('photo');
   const [capturing, setCapturing] = useState(false);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [preview, setPreview] = useState<MediaMoment | null>(null);
 
   const cameraRef = useRef<CameraView>(null);
   const addMedia = useSessionStore(s => s.addMedia);
@@ -34,6 +63,17 @@ export default function CameraScreen() {
   // Refs for pinch — PanResponder closure can't see changing state
   const zoomRef = useRef(0);
   const pinchStart = useRef({ distance: 0, zoom: 0 });
+
+  useEffect(() => {
+    if (!recording) return undefined;
+
+    setRecordSeconds(0);
+    const interval = setInterval(() => {
+      setRecordSeconds(seconds => Math.min(MAX_VIDEO_SECONDS, seconds + 1));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [recording]);
 
   const applyZoom = (val: number) => {
     const clamped = Math.max(0, Math.min(MAX_ZOOM, val));
@@ -74,11 +114,13 @@ export default function CameraScreen() {
   ).current;
 
   const handleCapture = async () => {
-    if (!cameraRef.current || capturing) return;
+    if (!cameraRef.current || capturing || recording) return;
     setCapturing(true);
     try {
       const photo = await cameraRef.current.takePictureAsync({ quality: 0.75 });
-      if (photo?.uri) setPreview(photo.uri);
+      if (photo?.uri) {
+        setPreview({ uri: photo.uri, mediaType: 'photo', createdAt: Date.now() });
+      }
     } catch {
       // stay on camera if capture fails
     } finally {
@@ -86,15 +128,50 @@ export default function CameraScreen() {
     }
   };
 
+  const handleRecord = async () => {
+    if (!cameraRef.current || capturing) return;
+
+    if (recording) {
+      cameraRef.current.stopRecording();
+      return;
+    }
+
+    setRecording(true);
+    try {
+      const video = await cameraRef.current.recordAsync({
+        maxDuration: MAX_VIDEO_SECONDS,
+        maxFileSize: MAX_VIDEO_FILE_SIZE,
+        codec: VIDEO_CODEC,
+      });
+      if (video?.uri) {
+        setPreview({ uri: video.uri, mediaType: 'video', createdAt: Date.now() });
+      }
+    } catch {
+      // stay on camera if recording fails
+    } finally {
+      setRecording(false);
+      setRecordSeconds(0);
+    }
+  };
+
   const handleSave = () => {
-    if (preview) addMedia(preview);
+    if (preview) addMedia(preview.uri, preview.mediaType);
     router.back();
   };
 
   const toggleFacing = () => setFacing(f => (f === 'back' ? 'front' : 'back'));
   const toggleFlash = () => setFlash(f => (f === 'off' ? 'on' : 'off'));
+  const handleRetake = () => setPreview(null);
+  const handleModeChange = (mode: CaptureMode) => {
+    if (recording || capturing) return;
+    setTorchEnabled(false);
+    setCaptureMode(mode);
+  };
 
   const activeZoomLabel = zoom < ZOOM_2X / 2 ? '1x' : '2x';
+  const captureAction = captureMode === 'photo' ? handleCapture : handleRecord;
+  const cameraMode = captureMode === 'photo' ? 'picture' : 'video';
+  const isVideoMode = captureMode === 'video';
 
   // ── Permission: loading ──────────────────────────────────────────────────
   if (!permission) {
@@ -156,7 +233,11 @@ export default function CameraScreen() {
   if (preview) {
     return (
       <View style={styles.container}>
-        <Image source={{ uri: preview }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        {preview.mediaType === 'photo' ? (
+          <Image source={{ uri: preview.uri }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        ) : (
+          <VideoPreview uri={preview.uri} />
+        )}
 
         {/* Top bar with close + label */}
         <SafeAreaView style={styles.topBar} edges={['top']}>
@@ -164,14 +245,16 @@ export default function CameraScreen() {
             <Ionicons name="close" size={22} color="#fff" />
           </TouchableOpacity>
           <View style={styles.topLabel}>
-            <Text style={styles.topLabelText}>PREVIEW</Text>
+            <Text style={styles.topLabelText}>
+              {preview.mediaType === 'video' ? 'VIDEO PREVIEW' : 'PREVIEW'}
+            </Text>
           </View>
           <View style={{ width: 44 }} />
         </SafeAreaView>
 
         {/* Retake / Save */}
         <SafeAreaView style={styles.previewBottom} edges={['bottom']}>
-          <TouchableOpacity style={styles.retakeBtn} onPress={() => setPreview(null)} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.retakeBtn} onPress={handleRetake} activeOpacity={0.8}>
             <Ionicons name="refresh" size={18} color={Colors.text} />
             <Text style={styles.retakeBtnText}>Retake</Text>
           </TouchableOpacity>
@@ -191,12 +274,48 @@ export default function CameraScreen() {
         ref={cameraRef}
         style={StyleSheet.absoluteFill}
         facing={facing}
-        flash={flash}
+        flash={isVideoMode ? 'off' : flash}
         zoom={zoom}
+        mode={cameraMode}
+        mute
+        enableTorch={isVideoMode && torchEnabled}
+        videoQuality={VIDEO_QUALITY}
+        videoBitrate={VIDEO_BITRATE}
       />
 
       {/* Bottom controls — all in one area at the bottom */}
+      {recording && (
+        <SafeAreaView style={styles.recordingTop} edges={['top']}>
+          <View style={styles.recordingPill}>
+            <View style={styles.recordingDot} />
+            <Text style={styles.recordingText}>REC {recordSeconds}s</Text>
+          </View>
+          <Text style={styles.recordingLimit}>{MAX_VIDEO_SECONDS}s max</Text>
+        </SafeAreaView>
+      )}
+
       <SafeAreaView style={styles.bottomArea} edges={['bottom']}>
+
+        <View style={styles.modeToggle}>
+          {(['photo', 'video'] as const).map(mode => (
+            <TouchableOpacity
+              key={mode}
+              style={[styles.modeToggleBtn, captureMode === mode && styles.modeToggleBtnActive]}
+              onPress={() => handleModeChange(mode)}
+              activeOpacity={0.75}
+              disabled={recording || capturing}
+            >
+              <Text
+                style={[
+                  styles.modeToggleText,
+                  captureMode === mode && styles.modeToggleTextActive,
+                ]}
+              >
+                {mode === 'photo' ? 'Photo' : 'Video'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* Zoom toggle */}
         <View style={styles.zoomRow}>
@@ -225,35 +344,61 @@ export default function CameraScreen() {
 
           {/* Shutter */}
           <TouchableOpacity
-            onPress={handleCapture}
-            style={styles.captureRing}
+            onPress={captureAction}
+            style={[styles.captureRing, captureMode === 'video' && styles.captureRingVideo]}
             activeOpacity={0.85}
             disabled={capturing}
           >
             {capturing ? (
               <ActivityIndicator color="#fff" size="small" />
+            ) : recording ? (
+              <View style={styles.stopDot} />
             ) : (
-              <View style={styles.captureDot} />
+              <View style={[styles.captureDot, captureMode === 'video' && styles.captureDotVideo]} />
             )}
           </TouchableOpacity>
 
           {/* Flash */}
-          <TouchableOpacity
-            onPress={toggleFlash}
-            style={[styles.sideBtn, flash === 'on' && styles.sideBtnLit]}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name={flash === 'on' ? 'flash' : 'flash-off'}
-              size={22}
-              color={flash === 'on' ? Colors.accent : '#fff'}
-            />
-          </TouchableOpacity>
+          {isVideoMode ? (
+            <TouchableOpacity
+              onPress={() => setTorchEnabled(enabled => !enabled)}
+              style={[styles.sideBtn, torchEnabled && styles.sideBtnLit]}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={torchEnabled ? 'flash' : 'flash-off'}
+                size={22}
+                color={torchEnabled ? Colors.accent : '#fff'}
+              />
+              <Text style={[styles.sideBtnMicroText, torchEnabled && styles.sideBtnMicroTextLit]}>
+                Torch
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={toggleFlash}
+              style={[styles.sideBtn, flash === 'on' && styles.sideBtnLit]}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name={flash === 'on' ? 'flash' : 'flash-off'}
+                size={22}
+                color={flash === 'on' ? Colors.accent : '#fff'}
+              />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Cancel — subtle, secondary */}
-        <TouchableOpacity onPress={() => router.back()} style={styles.cancelRow} activeOpacity={0.6}>
-          <Text style={styles.cancelText}>Cancel</Text>
+        <TouchableOpacity
+          onPress={() => {
+            if (!recording) router.back();
+          }}
+          style={styles.cancelRow}
+          activeOpacity={0.6}
+          disabled={recording}
+        >
+          <Text style={styles.cancelText}>{recording ? 'Tap record to stop' : 'Cancel'}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     </View>
@@ -412,6 +557,43 @@ const styles = StyleSheet.create({
   },
 
   // ── Camera bottom controls ───────────────────────────────────────────────
+  recordingTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingTop: Spacing.md,
+    gap: 6,
+  },
+  recordingPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(0,0,0,0.52)',
+    borderWidth: 1,
+    borderColor: 'rgba(248,113,113,0.5)',
+  },
+  recordingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.modes.spicy.primary,
+  },
+  recordingText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: 1,
+  },
+  recordingLimit: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.62)',
+  },
   bottomArea: {
     position: 'absolute',
     bottom: 0,
@@ -422,6 +604,34 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     // subtle gradient effect via shadow-less bg
     backgroundColor: 'rgba(0,0,0,0.28)',
+  },
+  modeToggle: {
+    flexDirection: 'row',
+    gap: 4,
+    padding: 4,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.14)',
+    marginBottom: Spacing.md,
+  },
+  modeToggleBtn: {
+    minWidth: 78,
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: Radius.full,
+  },
+  modeToggleBtnActive: {
+    backgroundColor: Colors.accent,
+  },
+  modeToggleText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.62)',
+  },
+  modeToggleTextActive: {
+    color: '#0A0908',
   },
   zoomRow: {
     flexDirection: 'row',
@@ -471,6 +681,16 @@ const styles = StyleSheet.create({
     borderColor: Colors.accentBorder,
     backgroundColor: Colors.accentBg,
   },
+  sideBtnMicroText: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.62)',
+    letterSpacing: 0.2,
+    marginTop: 1,
+  },
+  sideBtnMicroTextLit: {
+    color: Colors.accent,
+  },
   captureRing: {
     width: 76,
     height: 76,
@@ -480,11 +700,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  captureRingVideo: {
+    borderColor: Colors.modes.spicy.primary,
+  },
   captureDot: {
     width: 56,
     height: 56,
     borderRadius: 28,
     backgroundColor: '#fff',
+  },
+  captureDotVideo: {
+    backgroundColor: Colors.modes.spicy.primary,
+  },
+  stopDot: {
+    width: 34,
+    height: 34,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.modes.spicy.primary,
   },
   cancelRow: {
     paddingVertical: Spacing.sm,

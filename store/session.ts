@@ -14,6 +14,14 @@ export type PlayedCard = {
   at: number;
 };
 
+export type MediaType = 'photo' | 'video';
+
+export type MediaMoment = {
+  uri: string;
+  mediaType: MediaType;
+  createdAt: number;
+};
+
 type SessionStore = {
   players: Player[];
   mode: Mode | null;
@@ -24,6 +32,7 @@ type SessionStore = {
   deckIndex: number;
   played: PlayedCard[];
   mediaUris: string[];
+  mediaMoments: MediaMoment[];
 
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
@@ -32,7 +41,7 @@ type SessionStore = {
   completeCard: () => void;
   skipCard: () => void;
   endGame: () => void;
-  addMedia: (uri: string) => void;
+  addMedia: (uri: string, mediaType?: MediaType) => void;
   reset: () => void;
 };
 
@@ -55,6 +64,7 @@ const defaultState = {
   deckIndex: 0,
   played: [] as PlayedCard[],
   mediaUris: [] as string[],
+  mediaMoments: [] as MediaMoment[],
 };
 
 export const useSessionStore = create<SessionStore>((set, get) => ({
@@ -129,8 +139,11 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
   endGame: () => set({ endedAt: Date.now() }),
 
-  addMedia: (uri: string) =>
-    set(s => ({ mediaUris: [...s.mediaUris, uri] })),
+  addMedia: (uri: string, mediaType: MediaType = 'photo') =>
+    set(s => ({
+      mediaUris: [...s.mediaUris, uri],
+      mediaMoments: [...s.mediaMoments, { uri, mediaType, createdAt: Date.now() }],
+    })),
 
   reset: () => set({ ...defaultState }),
 }));

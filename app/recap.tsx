@@ -1,12 +1,14 @@
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEvent } from 'expo';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { Button } from '@/components/ui/Button';
 import { AwardCard } from '@/components/recap/AwardCard';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { useSessionStore } from '@/store/session';
-import type { Player, PlayedCard } from '@/store/session';
+import type { MediaMoment, Player, PlayedCard } from '@/store/session';
 import type { Mode } from '@/data/types';
 
 function formatDuration(ms: number): string {
@@ -102,6 +104,56 @@ function StatTile({ icon, value, label, highlight }: StatTileProps) {
   );
 }
 
+function PhotoMomentThumb({ uri }: { uri: string }) {
+  return (
+    <View style={styles.thumbWrap}>
+      <Image source={{ uri }} style={styles.thumb} resizeMode="cover" />
+    </View>
+  );
+}
+
+function VideoMomentThumb({ uri }: { uri: string }) {
+  const player = useVideoPlayer(uri, player => {
+    player.loop = true;
+    player.muted = true;
+  });
+  const { isPlaying } = useEvent(player, 'playingChange', { isPlaying: player.playing });
+
+  const togglePlayback = () => {
+    if (isPlaying) {
+      player.pause();
+    } else {
+      player.play();
+    }
+  };
+
+  return (
+    <TouchableOpacity style={styles.thumbWrap} onPress={togglePlayback} activeOpacity={0.85}>
+      <VideoView
+        player={player}
+        style={styles.thumb}
+        nativeControls={false}
+        contentFit="cover"
+      />
+      <View style={styles.videoShade} />
+      <View style={styles.videoPlayBadge}>
+        <Ionicons name={isPlaying ? 'pause' : 'play'} size={18} color="#0A0908" />
+      </View>
+      <View style={styles.videoTypeBadge}>
+        <Text style={styles.videoTypeText}>VIDEO</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function MediaMomentThumb({ moment }: { moment: MediaMoment }) {
+  if (moment.mediaType === 'video') {
+    return <VideoMomentThumb uri={moment.uri} />;
+  }
+
+  return <PhotoMomentThumb uri={moment.uri} />;
+}
+
 export default function RecapScreen() {
   const players = useSessionStore(s => s.players);
   const mode = useSessionStore(s => s.mode);
@@ -109,6 +161,7 @@ export default function RecapScreen() {
   const startedAt = useSessionStore(s => s.startedAt);
   const endedAt = useSessionStore(s => s.endedAt);
   const mediaUris = useSessionStore(s => s.mediaUris);
+  const mediaMoments = useSessionStore(s => s.mediaMoments);
   const reset = useSessionStore(s => s.reset);
 
   const duration = startedAt && endedAt ? endedAt - startedAt : 0;
@@ -118,6 +171,9 @@ export default function RecapScreen() {
   const heroSub = mode ? HERO_SUBTITLES[mode] : '';
 
   const awards = computeAwards(players, played);
+  const mediaItems: MediaMoment[] = mediaMoments.length > 0
+    ? mediaMoments
+    : mediaUris.map((uri, i) => ({ uri, mediaType: 'photo', createdAt: i }));
 
   const playerStats = players
     .map(p => ({
@@ -227,9 +283,9 @@ export default function RecapScreen() {
         <View style={styles.section}>
           <View style={styles.sectionRow}>
             <Text style={[styles.sectionLabel, { marginBottom: 0 }]}>MEDIA MOMENTS</Text>
-            {mediaUris.length > 0 ? (
+            {mediaItems.length > 0 ? (
               <View style={styles.mediaCountPill}>
-                <Text style={styles.mediaCountText}>{mediaUris.length}</Text>
+                <Text style={styles.mediaCountText}>{mediaItems.length}</Text>
               </View>
             ) : (
               <View style={styles.comingSoonPill}>
@@ -238,20 +294,14 @@ export default function RecapScreen() {
             )}
           </View>
 
-          {mediaUris.length > 0 ? (
+          {mediaItems.length > 0 ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.thumbRow}
             >
-              {mediaUris.map((uri, i) => (
-                <View key={i} style={styles.thumbWrap}>
-                  <Image
-                    source={{ uri }}
-                    style={styles.thumb}
-                    resizeMode="cover"
-                  />
-                </View>
+              {mediaItems.map((moment, i) => (
+                <MediaMomentThumb key={`${moment.uri}-${i}`} moment={moment} />
               ))}
             </ScrollView>
           ) : (
@@ -476,6 +526,38 @@ const styles = StyleSheet.create({
   thumb: {
     width: 100,
     height: 100,
+  },
+  videoShade: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.16)',
+  },
+  videoPlayBadge: {
+    position: 'absolute',
+    left: 34,
+    top: 34,
+    width: 32,
+    height: 32,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  videoTypeBadge: {
+    position: 'absolute',
+    right: 7,
+    bottom: 7,
+    paddingVertical: 3,
+    paddingHorizontal: 7,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(0,0,0,0.62)',
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+  },
+  videoTypeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: Colors.accent,
+    letterSpacing: 0.7,
   },
   mediaCountPill: {
     backgroundColor: Colors.accentBg,
