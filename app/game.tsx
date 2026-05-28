@@ -71,9 +71,6 @@ export default function GameScreen() {
           <Text style={styles.turnSuffix}>'s turn</Text>
         </View>
         <View style={styles.topActions}>
-          <TouchableOpacity onPress={handleCamera} style={styles.iconBtn} hitSlop={8}>
-            <Ionicons name="camera-outline" size={18} color={Colors.textMuted} />
-          </TouchableOpacity>
           <TouchableOpacity onPress={handleEndGame} style={styles.endBtn} hitSlop={8}>
             <Ionicons name="stop-circle-outline" size={18} color={Colors.textMuted} />
             <Text style={styles.endBtnText}>End</Text>
@@ -99,28 +96,42 @@ export default function GameScreen() {
         })}
       </View>
 
-      {/* Card */}
-      <View style={styles.cardArea}>
-        {currentCard && (
-          <GameCard
-            card={currentCard}
-            mode={mode!}
-            cardNumber={deckIndex + 1}
-            totalCards={deck.length}
-          />
-        )}
-      </View>
+      {/* Card → camera FAB row → actions, all in normal flex flow */}
+      <View style={styles.content}>
+        <View style={styles.cardArea}>
+          {currentCard && (
+            <GameCard
+              card={currentCard}
+              mode={mode!}
+              cardNumber={deckIndex + 1}
+              totalCards={deck.length}
+            />
+          )}
+        </View>
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.skipBtn} onPress={skipCard} activeOpacity={0.7}>
-          <Ionicons name="play-skip-forward" size={16} color={Colors.textMuted} />
-          <Text style={styles.skipText}>Skip</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.doneBtn} onPress={completeCard} activeOpacity={0.8}>
-          <Text style={styles.doneText}>Done</Text>
-          <Ionicons name="checkmark" size={20} color="#0A0908" />
-        </TouchableOpacity>
+        {/* Camera FAB — self-sized, right-aligned between card and actions */}
+        <View style={styles.cameraRow}>
+          <TouchableOpacity
+            onPress={handleCamera}
+            style={[styles.cameraFab, { shadowColor: modeCfg.primary, borderColor: modeCfg.border }]}
+            activeOpacity={0.75}
+            hitSlop={8}
+          >
+            <Ionicons name="camera" size={22} color={Colors.text} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.skipBtn} onPress={skipCard} activeOpacity={0.7}>
+            <Ionicons name="play-skip-forward" size={16} color={Colors.textMuted} />
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.doneBtn} onPress={completeCard} activeOpacity={0.8}>
+            <Text style={styles.doneText}>Done</Text>
+            <Ionicons name="checkmark" size={20} color="#0A0908" />
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -170,14 +181,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
   },
-  iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.surface2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   endBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -204,9 +207,29 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: Radius.full,
   },
+  content: {
+    flex: 1,
+  },
   cardArea: {
     flex: 1,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  cameraRow: {
+    alignSelf: 'flex-end',
+    marginBottom: Spacing.sm,
+  },
+  cameraFab: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    backgroundColor: Colors.surface2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
   },
   actions: {
     flexDirection: 'row',
