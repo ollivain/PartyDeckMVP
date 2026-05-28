@@ -39,7 +39,7 @@ export default function PlayersScreen() {
 
       <View style={styles.titleBlock}>
         <Text style={styles.title}>
-          <Text style={{ color: Colors.text }}>Who's{'\n'}</Text>
+          <Text style={{ color: Colors.text }}>Who is{'\n'}</Text>
           <Text style={{ color: Colors.accent }}>playing?</Text>
         </Text>
         <Text style={styles.subtitle}>Add at least 2 players to start</Text>

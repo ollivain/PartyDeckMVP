@@ -1,17 +1,19 @@
 {
   "expo": {
     "name": "NiteDeck",
-    "slug": "PartyDeckMVP",
+    "slug": "nitedeck",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "partydeckmvp",
+    "scheme": "nitedeck",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nitedeck.app"
     },
     "android": {
+      "package": "com.nitedeck.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

@@ -157,7 +157,7 @@ export default function RecapScreen() {
         </View>
 
         {/* Intro / hero */}
-        <Text style={styles.kicker}>PARTY RECAP</Text>
+        <Text style={styles.kicker}>NIGHT RECAP</Text>
         <View style={styles.heroRow}>
           <Text style={styles.heroNum} numberOfLines={1} adjustsFontSizeToFit>{totalCompleted}</Text>
           <Text style={styles.heroUnit}>{totalCompleted === 1 ? 'card' : 'cards'}</Text>

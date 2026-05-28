@@ -30,7 +30,7 @@ export default function GameScreen() {
   };
 
   const handleEndGame = () => {
-    Alert.alert('End the party?', 'Stop the game and see your Party Recap.', [
+    Alert.alert('End the night?', 'Stop the game and see your Night Recap.', [
       { text: 'Keep playing', style: 'cancel' },
       { text: 'End Game', style: 'destructive', onPress: finishGame },
     ]);
@@ -45,12 +45,12 @@ export default function GameScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyState}>
           <Text style={styles.emptyEmoji}>🎴</Text>
-          <Text style={styles.emptyTitle}>Deck's empty!</Text>
+          <Text style={styles.emptyTitle}>Deck is empty!</Text>
           <Text style={styles.emptySubtitle}>
             You crushed {played.length} card{played.length !== 1 ? 's' : ''}.{'\n'}Time for the recap.
           </Text>
           <View style={styles.emptyBtn}>
-            <Button label="See Party Recap →" onPress={finishGame} fullWidth />
+            <Button label="See Night Recap →" onPress={finishGame} fullWidth />
           </View>
         </View>
       </SafeAreaView>
@@ -68,7 +68,7 @@ export default function GameScreen() {
           <Text style={styles.playerName} numberOfLines={1}>
             {currentPlayer?.name ?? '?'}
           </Text>
-          <Text style={styles.turnSuffix}>'s turn</Text>
+          <Text style={styles.turnSuffix}>{'’s turn'}</Text>
         </View>
         <View style={styles.topActions}>
           <TouchableOpacity onPress={handleEndGame} style={styles.endBtn} hitSlop={8}>
