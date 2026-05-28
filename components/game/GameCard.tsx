@@ -9,16 +9,13 @@ type GameCardProps = {
   totalCards: number;
 };
 
-const typeLabels: Record<Card['type'], string> = {
-  question: 'QUESTION',
-  task: 'TASK',
-  challenge: 'CHALLENGE',
-};
-
 const typeDots: Record<Card['type'], number> = {
   question: 1,
-  task: 2,
+  vote: 1,
+  pick: 2,
   challenge: 3,
+  camera: 2,
+  chaos: 3,
 };
 
 function cardFontSize(len: number): number {
@@ -30,7 +27,7 @@ function cardFontSize(len: number): number {
 export function GameCard({ card, mode, cardNumber, totalCards }: GameCardProps) {
   const cfg = Colors.modes[mode];
   const fontSize = cardFontSize(card.text.length);
-  const dots = typeDots[card.type];
+  const dots = card.intensity ?? typeDots[card.type];
 
   return (
     <View style={[styles.card, { borderColor: cfg.primary }]}>
@@ -38,7 +35,7 @@ export function GameCard({ card, mode, cardNumber, totalCards }: GameCardProps) 
       <View style={styles.topRow}>
         <View style={[styles.typeTag, { borderColor: cfg.primary }]}>
           <Text style={[styles.typeLabel, { color: cfg.primary }]}>
-            {typeLabels[card.type]}
+            {card.label}
           </Text>
         </View>
         <View style={styles.typeDots}>
