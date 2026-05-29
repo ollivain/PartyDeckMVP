@@ -22,7 +22,7 @@ export const Colors = {
       borderSelected: 'rgba(45, 212, 191, 0.55)',
       name: 'Chill',
       emoji: '🌊',
-      description: 'Good vibes only. Easy questions, fun stories.',
+      description: 'Light questions, easy laughs and zero pressure.',
     },
     spicy: {
       primary: '#F87171',
@@ -32,7 +32,7 @@ export const Colors = {
       borderSelected: 'rgba(248, 113, 113, 0.55)',
       name: 'Spicy',
       emoji: '🌶️',
-      description: 'Turn up the heat. Personal questions & hot takes.',
+      description: 'Personal questions, bold votes and honest answers.',
     },
     wild: {
       primary: '#A78BFA',
@@ -42,7 +42,7 @@ export const Colors = {
       borderSelected: 'rgba(167, 139, 250, 0.55)',
       name: 'Wild',
       emoji: '🌀',
-      description: 'Total chaos. Challenges, dares & group mayhem.',
+      description: 'Dares, camera moments and rules that change the game.',
     },
   },
 } as const;

@@ -45,10 +45,10 @@ export default function ModeScreen() {
 
       <View style={styles.titleBlock}>
         <Text style={styles.title}>
-          <Text style={{ color: Colors.text }}>Pick your </Text>
+          <Text style={{ color: Colors.text }}>Choose the </Text>
           <Text style={{ color: Colors.accent }}>vibe</Text>
         </Text>
-        <Text style={styles.subtitle}>Choose how wild tonight gets</Text>
+        <Text style={styles.subtitle}>Choose how tonight plays out.</Text>
       </View>
 
       <View style={styles.modeList}>
@@ -64,7 +64,7 @@ export default function ModeScreen() {
 
       <View style={styles.footer}>
         <Button
-          label="Continue ->"
+          label="Continue →"
           onPress={handleStart}
           fullWidth
           disabled={!selected}
