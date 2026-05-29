@@ -34,7 +34,7 @@ export default function HomeScreen() {
 
   const handleStart = () => {
     reset();
-    router.push('/players');
+    router.push('/game-type');
   };
 
   return (

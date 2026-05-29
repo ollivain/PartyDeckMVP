@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { allCards } from '@/data/cards';
-import type { Mode } from '@/data/types';
+import type { GameType, Mode } from '@/data/types';
 
 export type Player = {
   id: string;
@@ -24,6 +24,7 @@ export type MediaMoment = {
 
 type SessionStore = {
   players: Player[];
+  gameType: GameType | null;
   mode: Mode | null;
   startedAt: number | null;
   endedAt: number | null;
@@ -36,6 +37,7 @@ type SessionStore = {
 
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
+  setGameType: (gameType: GameType) => void;
   setMode: (mode: Mode) => void;
   startGame: () => boolean;
   completeCard: () => void;
@@ -81,6 +83,7 @@ function advanceCard(
 
 const defaultState = {
   players: [] as Player[],
+  gameType: null as GameType | null,
   mode: null as Mode | null,
   startedAt: null as number | null,
   endedAt: null as number | null,
@@ -109,11 +112,13 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   removePlayer: (id: string) =>
     set(s => ({ players: s.players.filter(p => p.id !== id) })),
 
+  setGameType: (gameType: GameType) => set({ gameType }),
+
   setMode: (mode: Mode) => set({ mode }),
 
   startGame: () => {
-    const { mode, players } = get();
-    if (!mode || players.length < 2) return false;
+    const { gameType, mode, players } = get();
+    if (gameType !== 'classic' || !mode || players.length < 2) return false;
     const modeCards = allCards.filter(c => c.mode === mode);
     if (modeCards.length === 0) return false;
     const deck = shuffleArray(modeCards).map(c => c.id);

@@ -1,3 +1,4 @@
+export type GameType = 'classic' | 'truth-or-dare';
 export type Mode = 'chill' | 'spicy' | 'wild';
 export type PackId =
   | 'temptations'

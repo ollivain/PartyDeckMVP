@@ -13,16 +13,22 @@ const MODES: Mode[] = ['chill', 'spicy', 'wild'];
 
 export default function ModeScreen() {
   const players = useSessionStore(s => s.players);
+  const gameType = useSessionStore(s => s.gameType);
   const setMode = useSessionStore(s => s.setMode);
   const currentMode = useSessionStore(s => s.mode);
   const [selected, setSelected] = useState<Mode | null>(currentMode);
   const canContinue = players.length >= 2;
 
   useEffect(() => {
+    if (!gameType) {
+      router.replace('/game-type');
+      return;
+    }
+
     if (!canContinue) {
       router.replace('/players');
     }
-  }, [canContinue]);
+  }, [canContinue, gameType]);
 
   const handleSelect = (mode: Mode) => {
     setSelected(mode);
@@ -34,13 +40,17 @@ export default function ModeScreen() {
     router.push('/rules');
   };
 
+  if (!gameType) {
+    return null;
+  }
+
   return (
     <Screen scroll>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
-        <Text style={styles.stepLabel}>STEP 2 OF 3</Text>
+        <Text style={styles.stepLabel}>STEP 3 OF 4</Text>
       </View>
 
       <View style={styles.titleBlock}>

@@ -22,6 +22,7 @@ type CardAdvanceAction = 'done' | 'skip';
 
 export default function GameScreen() {
   const players = useSessionStore(s => s.players);
+  const gameType = useSessionStore(s => s.gameType);
   const mode = useSessionStore(s => s.mode);
   const deck = useSessionStore(s => s.deck);
   const deckIndex = useSessionStore(s => s.deckIndex);
@@ -43,7 +44,13 @@ export default function GameScreen() {
   const hasStarted = Boolean(startedAt);
   const isCameraCard = currentCard?.type === 'camera';
   const isDeckEmpty = hasStarted && deck.length > 0 && deckIndex >= deck.length;
-  const invalidGameState = !hasEnoughPlayers || !mode || !hasStarted || deck.length === 0 || (!currentCard && !isDeckEmpty);
+  const invalidGameState =
+    gameType !== 'classic' ||
+    !hasEnoughPlayers ||
+    !mode ||
+    !hasStarted ||
+    deck.length === 0 ||
+    (!currentCard && !isDeckEmpty);
   const progress = deck.length > 0 ? deckIndex / deck.length : 0;
 
   const cardAnimatedStyle = useAnimatedStyle(() => ({
@@ -55,6 +62,11 @@ export default function GameScreen() {
   }));
 
   useEffect(() => {
+    if (gameType !== 'classic') {
+      router.replace('/game-type');
+      return;
+    }
+
     if (!hasEnoughPlayers) {
       router.replace('/players');
       return;
@@ -68,7 +80,7 @@ export default function GameScreen() {
     if (!hasStarted || deck.length === 0 || (!currentCard && !isDeckEmpty)) {
       router.replace('/rules');
     }
-  }, [currentCard, deck.length, hasEnoughPlayers, hasStarted, isDeckEmpty, mode]);
+  }, [currentCard, deck.length, gameType, hasEnoughPlayers, hasStarted, isDeckEmpty, mode]);
 
   const finishCardTransition = useCallback((action: CardAdvanceAction) => {
     if (action === 'done') {

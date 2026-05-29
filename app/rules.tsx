@@ -18,6 +18,7 @@ const RULE_ICONS = ['checkmark-circle-outline', 'play-skip-forward-outline', 'ca
 
 export default function RulesScreen() {
   const players = useSessionStore(s => s.players);
+  const gameType = useSessionStore(s => s.gameType);
   const mode = useSessionStore(s => s.mode);
   const startGame = useSessionStore(s => s.startGame);
   const [isStarting, setIsStarting] = useState(false);
@@ -26,6 +27,11 @@ export default function RulesScreen() {
   const modeCfg = mode ? Colors.modes[mode] : null;
 
   useEffect(() => {
+    if (!gameType) {
+      router.replace('/game-type');
+      return;
+    }
+
     if (!hasEnoughPlayers) {
       router.replace('/players');
       return;
@@ -34,10 +40,10 @@ export default function RulesScreen() {
     if (!mode) {
       router.replace('/mode');
     }
-  }, [hasEnoughPlayers, mode]);
+  }, [gameType, hasEnoughPlayers, mode]);
 
   const handleStart = () => {
-    if (startLockRef.current || !hasEnoughPlayers || !mode) return;
+    if (startLockRef.current || gameType !== 'classic' || !hasEnoughPlayers || !mode) return;
 
     startLockRef.current = true;
     setIsStarting(true);
@@ -52,13 +58,17 @@ export default function RulesScreen() {
     router.push('/game');
   };
 
+  if (!gameType) {
+    return null;
+  }
+
   return (
     <Screen scroll contentStyle={styles.content}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
-        <Text style={styles.stepLabel}>STEP 3 OF 3</Text>
+        <Text style={styles.stepLabel}>STEP 4 OF 4</Text>
       </View>
 
       <View style={styles.titleBlock}>
@@ -91,7 +101,12 @@ export default function RulesScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Button label="Start the night" onPress={handleStart} fullWidth disabled={!hasEnoughPlayers || !mode || isStarting} />
+        <Button
+          label={gameType === 'classic' ? 'Start the night' : 'Coming soon'}
+          onPress={handleStart}
+          fullWidth
+          disabled={gameType !== 'classic' || !hasEnoughPlayers || !mode || isStarting}
+        />
         <Button label="Back" onPress={() => router.back()} variant="ghost" fullWidth />
       </View>
     </Screen>

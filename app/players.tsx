@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,8 +14,15 @@ export default function PlayersScreen() {
   const [inputValue, setInputValue] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
   const players = useSessionStore(s => s.players);
+  const gameType = useSessionStore(s => s.gameType);
   const addPlayer = useSessionStore(s => s.addPlayer);
   const removePlayer = useSessionStore(s => s.removePlayer);
+
+  useEffect(() => {
+    if (!gameType) {
+      router.replace('/game-type');
+    }
+  }, [gameType]);
 
   const handleAdd = () => {
     if (!inputValue.trim()) return;
@@ -29,13 +36,17 @@ export default function PlayersScreen() {
 
   const canContinue = players.length >= 2;
 
+  if (!gameType) {
+    return null;
+  }
+
   return (
     <Screen scroll>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
-        <Text style={styles.stepLabel}>STEP 1 OF 3</Text>
+        <Text style={styles.stepLabel}>STEP 2 OF 4</Text>
       </View>
 
       <View style={styles.titleBlock}>
