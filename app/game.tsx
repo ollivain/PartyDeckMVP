@@ -1,17 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
-  cancelAnimation,
   Easing,
   runOnJS,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withRepeat,
-  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import { GameCard } from '@/components/game/GameCard';
@@ -38,8 +35,6 @@ export default function GameScreen() {
   const cardOpacity = useSharedValue(1);
   const cardScale = useSharedValue(1);
   const cardTranslateY = useSharedValue(0);
-  const cameraPulse = useSharedValue(0);
-
   const currentPlayer = players[currentPlayerIndex];
   const currentCard = deck[deckIndex] ? cardsById[deck[deckIndex]] : undefined;
   const isCameraCard = currentCard?.type === 'camera';
@@ -54,32 +49,6 @@ export default function GameScreen() {
     ],
   }));
 
-  const cameraPulseStyle = useAnimatedStyle(() => ({
-    opacity: 1 - cameraPulse.value * 0.05,
-    transform: [{ scale: 1 + cameraPulse.value * 0.025 }],
-  }));
-
-  useEffect(() => {
-    if (!isCameraCard || reduceMotion) {
-      cancelAnimation(cameraPulse);
-      cameraPulse.value = 0;
-      return;
-    }
-
-    cameraPulse.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 850, easing: Easing.inOut(Easing.quad) }),
-        withTiming(0, { duration: 850, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1,
-      false
-    );
-
-    return () => {
-      cancelAnimation(cameraPulse);
-    };
-  }, [cameraPulse, isCameraCard, reduceMotion]);
-
   const finishCardTransition = useCallback((action: CardAdvanceAction) => {
     if (action === 'done') {
       completeCard();
@@ -93,8 +62,8 @@ export default function GameScreen() {
     }
 
     cardOpacity.value = 0;
-    cardScale.value = 0.985;
-    cardTranslateY.value = 12;
+    cardScale.value = 0.95;
+    cardTranslateY.value = 26;
     cardOpacity.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) });
     cardTranslateY.value = withTiming(0, { duration: 150, easing: Easing.out(Easing.cubic) });
     cardScale.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) }, () => {
@@ -118,8 +87,8 @@ export default function GameScreen() {
         runOnJS(setIsTransitioningCard)(false);
       }
     });
-    cardScale.value = withTiming(0.975, { duration: 90, easing: Easing.in(Easing.cubic) });
-    cardTranslateY.value = withTiming(-10, { duration: 90, easing: Easing.in(Easing.cubic) });
+    cardScale.value = withTiming(0.95, { duration: 90, easing: Easing.in(Easing.cubic) });
+    cardTranslateY.value = withTiming(-24, { duration: 90, easing: Easing.in(Easing.cubic) });
   };
 
   const finishGame = () => {
@@ -214,25 +183,23 @@ export default function GameScreen() {
               <Text style={styles.cameraHintText}>Tap the camera to save this moment</Text>
             </View>
           )}
-          <Animated.View style={isCameraCard ? cameraPulseStyle : undefined}>
-            <PressableScale
-              onPress={handleCamera}
-              style={[
-                styles.cameraFab,
-                {
-                  shadowColor: isCameraCard ? Colors.accent : modeCfg.primary,
-                  borderColor: isCameraCard ? Colors.accentBorder : modeCfg.border,
-                },
-                isCameraCard && styles.cameraFabActive,
-              ]}
-              activeOpacity={0.75}
-              hitSlop={8}
-              pressedScale={0.94}
-            >
-              <Ionicons name="camera" size={22} color={isCameraCard ? Colors.accent : Colors.text} />
-              {isCameraCard && <Text style={styles.cameraFabLabel}>Capture</Text>}
-            </PressableScale>
-          </Animated.View>
+          <PressableScale
+            onPress={handleCamera}
+            style={[
+              styles.cameraFab,
+              {
+                shadowColor: isCameraCard ? Colors.accent : modeCfg.primary,
+                borderColor: isCameraCard ? Colors.accent : modeCfg.border,
+              },
+              isCameraCard && styles.cameraFabActive,
+            ]}
+            activeOpacity={0.75}
+            hitSlop={8}
+            pressedScale={0.94}
+          >
+            <Ionicons name="camera" size={22} color={isCameraCard ? Colors.accent : Colors.text} />
+            {isCameraCard && <Text style={styles.cameraFabLabel}>Capture</Text>}
+          </PressableScale>
         </View>
 
         {/* Actions */}
@@ -242,7 +209,7 @@ export default function GameScreen() {
             onPress={() => advanceWithTransition('skip')}
             activeOpacity={0.74}
             disabled={isTransitioningCard}
-            pressedScale={0.98}
+            pressedScale={0.97}
           >
             <Ionicons name="play-skip-forward" size={16} color={Colors.textMuted} />
             <Text style={styles.skipText}>Skip</Text>
@@ -252,7 +219,7 @@ export default function GameScreen() {
             onPress={() => advanceWithTransition('done')}
             activeOpacity={0.78}
             disabled={isTransitioningCard}
-            pressedScale={0.98}
+            pressedScale={0.95}
           >
             <Text style={styles.doneText}>Done</Text>
             <Ionicons name="checkmark" size={20} color="#0A0908" />

@@ -172,15 +172,15 @@ function MediaMomentTile({ moment, onPress, style, moreCount, index = 0 }: Media
     entrance.value = reduceMotion ? 1 : 0;
     if (!reduceMotion) {
       entrance.value = withDelay(
-        Math.min(index * 35, 140),
-        withTiming(1, { duration: 180 })
+        Math.min(index * 55, 220),
+        withTiming(1, { duration: 250 })
       );
     }
   }, [entrance, index, moment.uri, reduceMotion]);
 
   const entranceStyle = useAnimatedStyle(() => ({
     opacity: entrance.value,
-    transform: [{ scale: 0.96 + entrance.value * 0.04 }],
+    transform: [{ scale: 0.92 + entrance.value * 0.08 }],
   }));
 
   return (

@@ -53,7 +53,7 @@ export function Button({
       onPress={onPress}
       disabled={disabled}
       activeOpacity={0.78}
-      pressedScale={variant === 'ghost' ? 0.99 : 0.97}
+      pressedScale={variant === 'primary' ? 0.95 : variant === 'ghost' ? 0.98 : 0.97}
       style={[
         styles.base,
         variantContainer[variant],

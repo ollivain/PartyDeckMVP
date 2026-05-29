@@ -17,7 +17,7 @@ export function PressableScale({
   disabled,
   onPressIn,
   onPressOut,
-  pressedScale = 0.97,
+  pressedScale = 0.96,
   style,
   ...props
 }: PressableScaleProps) {
@@ -31,7 +31,7 @@ export function PressableScale({
   const setPressed = (pressed: boolean) => {
     scale.value = reduceMotion
       ? 1
-      : withTiming(pressed && !disabled ? pressedScale : 1, { duration: 90 });
+      : withTiming(pressed && !disabled ? pressedScale : 1, { duration: 100 });
   };
 
   return (
