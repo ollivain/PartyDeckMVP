@@ -514,6 +514,8 @@ export default function RecapScreen() {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState<number | null>(null);
   const [isSharingAll, setIsSharingAll] = useState(false);
+  const shareAllAlertOpenRef = useRef(false);
+  const sharingAllLockRef = useRef(false);
 
   const duration = startedAt && endedAt ? endedAt - startedAt : 0;
   const totalCompleted = played.filter(p => !p.skipped).length;
@@ -536,7 +538,7 @@ export default function RecapScreen() {
 
   const handlePlayAgain = () => {
     reset();
-    router.navigate('/');
+    router.replace('/');
   };
 
   const handleBack = () => {
@@ -546,9 +548,10 @@ export default function RecapScreen() {
 
   const shareFirstMemory = async () => {
     const firstMoment = mediaItems[0];
-    if (!firstMoment || isSharingAll) return;
+    if (!firstMoment || sharingAllLockRef.current) return;
 
     try {
+      sharingAllLockRef.current = true;
       setIsSharingAll(true);
       const result = await shareMediaMoment(firstMoment, 'Share NiteDeck memory');
 
@@ -558,22 +561,41 @@ export default function RecapScreen() {
     } catch {
       Alert.alert('Share failed', 'These memories could not be shared right now.');
     } finally {
+      sharingAllLockRef.current = false;
       setIsSharingAll(false);
     }
   };
 
   const handleShareAllMemories = () => {
-    if (mediaItems.length === 0 || isSharingAll) return;
+    if (mediaItems.length === 0 || isSharingAll || sharingAllLockRef.current || shareAllAlertOpenRef.current) return;
 
     if (mediaItems.length > 1) {
       // TODO: Generate a branded NiteDeck recap poster so all memories can share as one image.
+      shareAllAlertOpenRef.current = true;
       Alert.alert(
         'Share Memories',
         'This device can share one local NiteDeck file at a time. Share the first memory now, or open moments individually to share the rest.',
         [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Share First', onPress: () => { void shareFirstMemory(); } },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => {
+              shareAllAlertOpenRef.current = false;
+            },
+          },
+          {
+            text: 'Share First',
+            onPress: () => {
+              shareAllAlertOpenRef.current = false;
+              void shareFirstMemory();
+            },
+          },
         ],
+        {
+          onDismiss: () => {
+            shareAllAlertOpenRef.current = false;
+          },
+        },
       );
       return;
     }

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,18 +27,23 @@ export default function GameScreen() {
   const deckIndex = useSessionStore(s => s.deckIndex);
   const currentPlayerIndex = useSessionStore(s => s.currentPlayerIndex);
   const played = useSessionStore(s => s.played);
+  const startedAt = useSessionStore(s => s.startedAt);
   const completeCard = useSessionStore(s => s.completeCard);
   const skipCard = useSessionStore(s => s.skipCard);
   const endGame = useSessionStore(s => s.endGame);
   const [isTransitioningCard, setIsTransitioningCard] = useState(false);
+  const endAlertOpenRef = useRef(false);
   const reduceMotion = useReducedMotion();
   const cardOpacity = useSharedValue(1);
   const cardScale = useSharedValue(1);
   const cardTranslateY = useSharedValue(0);
-  const currentPlayer = players[currentPlayerIndex];
+  const currentPlayer = players.length > 0 ? players[currentPlayerIndex % players.length] : undefined;
   const currentCard = deck[deckIndex] ? cardsById[deck[deckIndex]] : undefined;
+  const hasEnoughPlayers = players.length >= 2;
+  const hasStarted = Boolean(startedAt);
   const isCameraCard = currentCard?.type === 'camera';
-  const isDeckEmpty = deckIndex >= deck.length;
+  const isDeckEmpty = hasStarted && deck.length > 0 && deckIndex >= deck.length;
+  const invalidGameState = !hasEnoughPlayers || !mode || !hasStarted || deck.length === 0 || (!currentCard && !isDeckEmpty);
   const progress = deck.length > 0 ? deckIndex / deck.length : 0;
 
   const cardAnimatedStyle = useAnimatedStyle(() => ({
@@ -48,6 +53,22 @@ export default function GameScreen() {
       { scale: cardScale.value },
     ],
   }));
+
+  useEffect(() => {
+    if (!hasEnoughPlayers) {
+      router.replace('/players');
+      return;
+    }
+
+    if (!mode) {
+      router.replace('/mode');
+      return;
+    }
+
+    if (!hasStarted || deck.length === 0 || (!currentCard && !isDeckEmpty)) {
+      router.replace('/rules');
+    }
+  }, [currentCard, deck.length, hasEnoughPlayers, hasStarted, isDeckEmpty, mode]);
 
   const finishCardTransition = useCallback((action: CardAdvanceAction) => {
     if (action === 'done') {
@@ -97,15 +118,37 @@ export default function GameScreen() {
   };
 
   const handleEndGame = () => {
-    Alert.alert('End the night?', 'Stop the game and see your Night Recap.', [
-      { text: 'Keep playing', style: 'cancel' },
-      { text: 'End Game', style: 'destructive', onPress: finishGame },
-    ]);
+    if (endAlertOpenRef.current) return;
+
+    endAlertOpenRef.current = true;
+    Alert.alert(
+      'End the night?',
+      'Stop the game and see your Night Recap.',
+      [
+        {
+          text: 'Keep playing',
+          style: 'cancel',
+          onPress: () => {
+            endAlertOpenRef.current = false;
+          },
+        },
+        { text: 'End Game', style: 'destructive', onPress: finishGame },
+      ],
+      {
+        onDismiss: () => {
+          endAlertOpenRef.current = false;
+        },
+      },
+    );
   };
 
   const handleCamera = () => {
     router.push('/camera');
   };
+
+  if (invalidGameState) {
+    return null;
+  }
 
   if (isDeckEmpty) {
     return (

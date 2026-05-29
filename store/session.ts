@@ -37,7 +37,7 @@ type SessionStore = {
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
   setMode: (mode: Mode) => void;
-  startGame: () => void;
+  startGame: () => boolean;
   completeCard: () => void;
   skipCard: () => void;
   endGame: () => void;
@@ -112,9 +112,10 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
   setMode: (mode: Mode) => set({ mode }),
 
   startGame: () => {
-    const { mode } = get();
-    if (!mode) return;
+    const { mode, players } = get();
+    if (!mode || players.length < 2) return false;
     const modeCards = allCards.filter(c => c.mode === mode);
+    if (modeCards.length === 0) return false;
     const deck = shuffleArray(modeCards).map(c => c.id);
     set({
       deck,
@@ -124,6 +125,7 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
       startedAt: Date.now(),
       endedAt: null,
     });
+    return true;
   },
 
   completeCard: () => set(s => advanceCard(s, false)),

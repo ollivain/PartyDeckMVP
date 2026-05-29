@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,9 +12,17 @@ import type { Mode } from '@/data/types';
 const MODES: Mode[] = ['chill', 'spicy', 'wild'];
 
 export default function ModeScreen() {
+  const players = useSessionStore(s => s.players);
   const setMode = useSessionStore(s => s.setMode);
   const currentMode = useSessionStore(s => s.mode);
   const [selected, setSelected] = useState<Mode | null>(currentMode);
+  const canContinue = players.length >= 2;
+
+  useEffect(() => {
+    if (!canContinue) {
+      router.replace('/players');
+    }
+  }, [canContinue]);
 
   const handleSelect = (mode: Mode) => {
     setSelected(mode);
@@ -22,7 +30,7 @@ export default function ModeScreen() {
   };
 
   const handleStart = () => {
-    if (!selected) return;
+    if (!canContinue || !selected) return;
     router.push('/rules');
   };
 

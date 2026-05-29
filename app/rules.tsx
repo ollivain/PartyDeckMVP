@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,19 +17,38 @@ const RULES = [
 const RULE_ICONS = ['checkmark-circle-outline', 'play-skip-forward-outline', 'camera-outline', 'sparkles-outline'] as const;
 
 export default function RulesScreen() {
+  const players = useSessionStore(s => s.players);
   const mode = useSessionStore(s => s.mode);
   const startGame = useSessionStore(s => s.startGame);
+  const [isStarting, setIsStarting] = useState(false);
+  const startLockRef = useRef(false);
+  const hasEnoughPlayers = players.length >= 2;
   const modeCfg = mode ? Colors.modes[mode] : null;
 
   useEffect(() => {
+    if (!hasEnoughPlayers) {
+      router.replace('/players');
+      return;
+    }
+
     if (!mode) {
       router.replace('/mode');
     }
-  }, [mode]);
+  }, [hasEnoughPlayers, mode]);
 
   const handleStart = () => {
-    if (!mode) return;
-    startGame();
+    if (startLockRef.current || !hasEnoughPlayers || !mode) return;
+
+    startLockRef.current = true;
+    setIsStarting(true);
+
+    const didStart = startGame();
+    if (!didStart) {
+      startLockRef.current = false;
+      setIsStarting(false);
+      return;
+    }
+
     router.push('/game');
   };
 
@@ -72,7 +91,7 @@ export default function RulesScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Button label="Start the night" onPress={handleStart} fullWidth disabled={!mode} />
+        <Button label="Start the night" onPress={handleStart} fullWidth disabled={!hasEnoughPlayers || !mode || isStarting} />
         <Button label="Back" onPress={() => router.back()} variant="ghost" fullWidth />
       </View>
     </Screen>

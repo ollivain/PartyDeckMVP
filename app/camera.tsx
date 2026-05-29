@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Image,
   PanResponder,
   StyleSheet,
   Text,
   TouchableOpacity,
+  type GestureResponderEvent,
   View,
 } from 'react-native';
 import { router } from 'expo-router';
@@ -28,6 +30,7 @@ const MAX_VIDEO_FILE_SIZE = 25_000_000;
 const VIDEO_BITRATE = 12_000_000;
 const VIDEO_QUALITY: VideoQuality = '1080p';
 const VIDEO_CODEC: VideoCodec = 'avc1';
+const FOCUS_RING_SIZE = 76;
 type CaptureMode = MediaType;
 
 function VideoPreview({ uri }: { uri: string }) {
@@ -60,8 +63,11 @@ export default function CameraScreen() {
   const [recording, setRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [preview, setPreview] = useState<MediaMoment | null>(null);
+  const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null);
 
   const cameraRef = useRef<CameraView>(null);
+  const saveLockRef = useRef(false);
+  const focusRingAnim = useRef(new Animated.Value(0)).current;
   const addMedia = useSessionStore(s => s.addMedia);
 
   // Refs for pinch — PanResponder closure can't see changing state
@@ -159,9 +165,10 @@ export default function CameraScreen() {
   };
 
   const handleSave = () => {
-    if (saving) return;
+    if (saveLockRef.current || saving || !preview) return;
+    saveLockRef.current = true;
     setSaving(true);
-    if (preview) addMedia(preview.uri, preview.mediaType);
+    addMedia(preview.uri, preview.mediaType);
     router.back();
   };
 
@@ -173,11 +180,30 @@ export default function CameraScreen() {
     setTorchEnabled(false);
     setCaptureMode(mode);
   };
+  // Expo Camera does not expose a tap coordinate focus API; this is visual feedback only.
+  const showFocusRing = (event: GestureResponderEvent) => {
+    if (capturing) return;
+    const { locationX, locationY } = event.nativeEvent;
+
+    setFocusPoint({ x: locationX, y: locationY });
+    focusRingAnim.stopAnimation();
+    focusRingAnim.setValue(0);
+    Animated.timing(focusRingAnim, {
+      toValue: 1,
+      duration: 620,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished) {
+        setFocusPoint(null);
+      }
+    });
+  };
 
   const activeZoomLabel = zoom < ZOOM_2X / 2 ? '1x' : '2x';
   const captureAction = captureMode === 'photo' ? handleCapture : handleRecord;
   const cameraMode = captureMode === 'photo' ? 'picture' : 'video';
   const isVideoMode = captureMode === 'video';
+  const mirrorFrontCamera = facing === 'front';
 
   // ── Permission: loading ──────────────────────────────────────────────────
   if (!permission) {
@@ -289,11 +315,43 @@ export default function CameraScreen() {
         flash={isVideoMode ? 'off' : flash}
         zoom={zoom}
         mode={cameraMode}
+        mirror={mirrorFrontCamera}
         mute
         enableTorch={isVideoMode && torchEnabled}
         videoQuality={VIDEO_QUALITY}
         videoBitrate={VIDEO_BITRATE}
       />
+
+      <View
+        style={StyleSheet.absoluteFill}
+        onStartShouldSetResponder={event => event.nativeEvent.touches.length === 1}
+        onResponderRelease={showFocusRing}
+      >
+        {focusPoint && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles.focusRing,
+              {
+                left: focusPoint.x - FOCUS_RING_SIZE / 2,
+                top: focusPoint.y - FOCUS_RING_SIZE / 2,
+                opacity: focusRingAnim.interpolate({
+                  inputRange: [0, 0.22, 1],
+                  outputRange: [0, 1, 0],
+                }),
+                transform: [
+                  {
+                    scale: focusRingAnim.interpolate({
+                      inputRange: [0, 0.22, 1],
+                      outputRange: [1.18, 1, 0.94],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          />
+        )}
+      </View>
 
       {/* Bottom controls — all in one area at the bottom */}
       {recording && (
@@ -608,6 +666,15 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.62)',
+  },
+  focusRing: {
+    position: 'absolute',
+    width: FOCUS_RING_SIZE,
+    height: FOCUS_RING_SIZE,
+    borderRadius: FOCUS_RING_SIZE / 2,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
   },
   bottomArea: {
     position: 'absolute',
