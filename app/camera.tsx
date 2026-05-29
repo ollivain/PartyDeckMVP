@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { CameraType, FlashMode, VideoCodec, VideoQuality } from 'expo-camera';
 import { useVideoPlayer, VideoView } from 'expo-video';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useSessionStore } from '@/store/session';
 import type { MediaMoment, MediaType } from '@/store/session';
@@ -262,15 +263,16 @@ export default function CameraScreen() {
             <Ionicons name="refresh" size={18} color={Colors.text} />
             <Text style={styles.retakeBtnText}>Retake</Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          <PressableScale
             style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
             onPress={handleSave}
             activeOpacity={0.8}
             disabled={saving}
+            pressedScale={0.97}
           >
             <Ionicons name="checkmark" size={20} color="#0A0908" />
             <Text style={styles.saveBtnText}>Save</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </SafeAreaView>
       </View>
     );
@@ -352,11 +354,12 @@ export default function CameraScreen() {
           </TouchableOpacity>
 
           {/* Shutter */}
-          <TouchableOpacity
+          <PressableScale
             onPress={captureAction}
             style={[styles.captureRing, captureMode === 'video' && styles.captureRingVideo]}
             activeOpacity={0.85}
             disabled={capturing}
+            pressedScale={0.94}
           >
             {capturing ? (
               <ActivityIndicator color="#fff" size="small" />
@@ -365,7 +368,7 @@ export default function CameraScreen() {
             ) : (
               <View style={[styles.captureDot, captureMode === 'video' && styles.captureDotVideo]} />
             )}
-          </TouchableOpacity>
+          </PressableScale>
 
           {/* Flash */}
           {isVideoMode ? (

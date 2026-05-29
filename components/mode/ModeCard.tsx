@@ -1,5 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Colors, Radius, Spacing } from '@/constants/theme';
+import { PressableScale } from '@/components/ui/PressableScale';
 import type { Mode } from '@/data/types';
 
 const INTENSITY: Record<Mode, number> = { chill: 1, spicy: 2, wild: 3 };
@@ -20,9 +21,10 @@ export function ModeCard({ mode, selected, onPress }: ModeCardProps) {
   const level = INTENSITY[mode];
 
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={onPress}
       activeOpacity={0.8}
+      pressedScale={0.985}
       style={[
         styles.card,
         selected
@@ -86,7 +88,7 @@ export function ModeCard({ mode, selected, onPress }: ModeCardProps) {
           </View>
         )}
       </View>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

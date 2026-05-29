@@ -1,5 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { Colors, Radius, Spacing } from '@/constants/theme';
+import { PressableScale } from '@/components/ui/PressableScale';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
@@ -48,10 +49,11 @@ export function Button({
   fullWidth,
 }: ButtonProps) {
   return (
-    <TouchableOpacity
+    <PressableScale
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.75}
+      activeOpacity={0.78}
+      pressedScale={variant === 'ghost' ? 0.99 : 0.97}
       style={[
         styles.base,
         variantContainer[variant],
@@ -61,7 +63,7 @@ export function Button({
       ]}
     >
       <Text style={[styles.text, variantText[variant], sizeText[size]]}>{label}</Text>
-    </TouchableOpacity>
+    </PressableScale>
   );
 }
 

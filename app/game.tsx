@@ -1,12 +1,27 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  cancelAnimation,
+  Easing,
+  runOnJS,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { GameCard } from '@/components/game/GameCard';
 import { Button } from '@/components/ui/Button';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Colors, Radius, Spacing } from '@/constants/theme';
 import { useSessionStore } from '@/store/session';
 import { cardsById } from '@/data/cards';
+
+type CardAdvanceAction = 'done' | 'skip';
 
 export default function GameScreen() {
   const players = useSessionStore(s => s.players);
@@ -18,12 +33,94 @@ export default function GameScreen() {
   const completeCard = useSessionStore(s => s.completeCard);
   const skipCard = useSessionStore(s => s.skipCard);
   const endGame = useSessionStore(s => s.endGame);
+  const [isTransitioningCard, setIsTransitioningCard] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const cardOpacity = useSharedValue(1);
+  const cardScale = useSharedValue(1);
+  const cardTranslateY = useSharedValue(0);
+  const cameraPulse = useSharedValue(0);
 
   const currentPlayer = players[currentPlayerIndex];
   const currentCard = deck[deckIndex] ? cardsById[deck[deckIndex]] : undefined;
   const isCameraCard = currentCard?.type === 'camera';
   const isDeckEmpty = deckIndex >= deck.length;
   const progress = deck.length > 0 ? deckIndex / deck.length : 0;
+
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: cardOpacity.value,
+    transform: [
+      { translateY: cardTranslateY.value },
+      { scale: cardScale.value },
+    ],
+  }));
+
+  const cameraPulseStyle = useAnimatedStyle(() => ({
+    opacity: 1 - cameraPulse.value * 0.05,
+    transform: [{ scale: 1 + cameraPulse.value * 0.025 }],
+  }));
+
+  useEffect(() => {
+    if (!isCameraCard || reduceMotion) {
+      cancelAnimation(cameraPulse);
+      cameraPulse.value = 0;
+      return;
+    }
+
+    cameraPulse.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 850, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0, { duration: 850, easing: Easing.inOut(Easing.quad) })
+      ),
+      -1,
+      false
+    );
+
+    return () => {
+      cancelAnimation(cameraPulse);
+    };
+  }, [cameraPulse, isCameraCard, reduceMotion]);
+
+  const finishCardTransition = useCallback((action: CardAdvanceAction) => {
+    if (action === 'done') {
+      completeCard();
+    } else {
+      skipCard();
+    }
+
+    if (reduceMotion) {
+      setIsTransitioningCard(false);
+      return;
+    }
+
+    cardOpacity.value = 0;
+    cardScale.value = 0.985;
+    cardTranslateY.value = 12;
+    cardOpacity.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) });
+    cardTranslateY.value = withTiming(0, { duration: 150, easing: Easing.out(Easing.cubic) });
+    cardScale.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) }, () => {
+      runOnJS(setIsTransitioningCard)(false);
+    });
+  }, [cardOpacity, cardScale, cardTranslateY, completeCard, reduceMotion, skipCard]);
+
+  const advanceWithTransition = (action: CardAdvanceAction) => {
+    if (isTransitioningCard || isDeckEmpty) return;
+    setIsTransitioningCard(true);
+
+    if (reduceMotion) {
+      finishCardTransition(action);
+      return;
+    }
+
+    cardOpacity.value = withTiming(0, { duration: 90, easing: Easing.in(Easing.cubic) }, finished => {
+      if (finished) {
+        runOnJS(finishCardTransition)(action);
+      } else {
+        runOnJS(setIsTransitioningCard)(false);
+      }
+    });
+    cardScale.value = withTiming(0.975, { duration: 90, easing: Easing.in(Easing.cubic) });
+    cardTranslateY.value = withTiming(-10, { duration: 90, easing: Easing.in(Easing.cubic) });
+  };
 
   const finishGame = () => {
     endGame();
@@ -72,10 +169,10 @@ export default function GameScreen() {
           <Text style={styles.turnSuffix}>{'’s turn'}</Text>
         </View>
         <View style={styles.topActions}>
-          <TouchableOpacity onPress={handleEndGame} style={styles.endBtn} hitSlop={8}>
+          <PressableScale onPress={handleEndGame} style={styles.endBtn} hitSlop={8} pressedScale={0.97}>
             <Ionicons name="stop-circle-outline" size={18} color={Colors.textMuted} />
             <Text style={styles.endBtnText}>End</Text>
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </View>
 
@@ -99,7 +196,7 @@ export default function GameScreen() {
 
       {/* Card → camera FAB row → actions, all in normal flex flow */}
       <View style={styles.content}>
-        <View style={styles.cardArea}>
+        <Animated.View style={[styles.cardArea, cardAnimatedStyle]}>
           {currentCard && (
             <GameCard
               card={currentCard}
@@ -108,7 +205,7 @@ export default function GameScreen() {
               totalCards={deck.length}
             />
           )}
-        </View>
+        </Animated.View>
 
         {/* Camera FAB — self-sized, right-aligned between card and actions */}
         <View style={styles.cameraRow}>
@@ -117,34 +214,49 @@ export default function GameScreen() {
               <Text style={styles.cameraHintText}>Tap the camera to save this moment</Text>
             </View>
           )}
-          <TouchableOpacity
-            onPress={handleCamera}
-            style={[
-              styles.cameraFab,
-              {
-                shadowColor: isCameraCard ? Colors.accent : modeCfg.primary,
-                borderColor: isCameraCard ? Colors.accentBorder : modeCfg.border,
-              },
-              isCameraCard && styles.cameraFabActive,
-            ]}
-            activeOpacity={0.75}
-            hitSlop={8}
-          >
-            <Ionicons name="camera" size={22} color={isCameraCard ? Colors.accent : Colors.text} />
-            {isCameraCard && <Text style={styles.cameraFabLabel}>Capture</Text>}
-          </TouchableOpacity>
+          <Animated.View style={isCameraCard ? cameraPulseStyle : undefined}>
+            <PressableScale
+              onPress={handleCamera}
+              style={[
+                styles.cameraFab,
+                {
+                  shadowColor: isCameraCard ? Colors.accent : modeCfg.primary,
+                  borderColor: isCameraCard ? Colors.accentBorder : modeCfg.border,
+                },
+                isCameraCard && styles.cameraFabActive,
+              ]}
+              activeOpacity={0.75}
+              hitSlop={8}
+              pressedScale={0.94}
+            >
+              <Ionicons name="camera" size={22} color={isCameraCard ? Colors.accent : Colors.text} />
+              {isCameraCard && <Text style={styles.cameraFabLabel}>Capture</Text>}
+            </PressableScale>
+          </Animated.View>
         </View>
 
         {/* Actions */}
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.skipBtn} onPress={skipCard} activeOpacity={0.7}>
+          <PressableScale
+            style={[styles.skipBtn, isTransitioningCard && styles.actionBtnDisabled]}
+            onPress={() => advanceWithTransition('skip')}
+            activeOpacity={0.74}
+            disabled={isTransitioningCard}
+            pressedScale={0.98}
+          >
             <Ionicons name="play-skip-forward" size={16} color={Colors.textMuted} />
             <Text style={styles.skipText}>Skip</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.doneBtn} onPress={completeCard} activeOpacity={0.8}>
+          </PressableScale>
+          <PressableScale
+            style={[styles.doneBtn, isTransitioningCard && styles.actionBtnDisabled]}
+            onPress={() => advanceWithTransition('done')}
+            activeOpacity={0.78}
+            disabled={isTransitioningCard}
+            pressedScale={0.98}
+          >
             <Text style={styles.doneText}>Done</Text>
             <Ionicons name="checkmark" size={20} color="#0A0908" />
-          </TouchableOpacity>
+          </PressableScale>
         </View>
       </View>
     </SafeAreaView>
@@ -312,6 +424,9 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: Radius.xl,
     backgroundColor: Colors.accent,
+  },
+  actionBtnDisabled: {
+    opacity: 0.55,
   },
   doneText: {
     fontSize: 17,

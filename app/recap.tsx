@@ -1,11 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { Alert, Image, Modal, PanResponder, ScrollView, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { Button } from '@/components/ui/Button';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { AwardCard } from '@/components/recap/AwardCard';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { cardsById } from '@/data/cards';
@@ -127,6 +135,7 @@ type MediaTileProps = {
   onPress: () => void;
   style?: StyleProp<ViewStyle>;
   moreCount?: number;
+  index?: number;
 };
 
 function VideoMomentContent({ uri }: { uri: string }) {
@@ -155,20 +164,40 @@ function VideoMomentContent({ uri }: { uri: string }) {
   );
 }
 
-function MediaMomentTile({ moment, onPress, style, moreCount }: MediaTileProps) {
+function MediaMomentTile({ moment, onPress, style, moreCount, index = 0 }: MediaTileProps) {
+  const reduceMotion = useReducedMotion();
+  const entrance = useSharedValue(reduceMotion ? 1 : 0);
+
+  useEffect(() => {
+    entrance.value = reduceMotion ? 1 : 0;
+    if (!reduceMotion) {
+      entrance.value = withDelay(
+        Math.min(index * 35, 140),
+        withTiming(1, { duration: 180 })
+      );
+    }
+  }, [entrance, index, moment.uri, reduceMotion]);
+
+  const entranceStyle = useAnimatedStyle(() => ({
+    opacity: entrance.value,
+    transform: [{ scale: 0.96 + entrance.value * 0.04 }],
+  }));
+
   return (
-    <TouchableOpacity style={[styles.mediaTile, style]} onPress={onPress} activeOpacity={0.88}>
-      {moment.mediaType === 'video' ? (
-        <VideoMomentContent uri={moment.uri} />
-      ) : (
-        <Image source={{ uri: moment.uri }} style={styles.mediaFill} resizeMode="cover" />
-      )}
-      {moreCount ? (
-        <View style={styles.moreOverlay}>
-          <Text style={styles.moreText}>+{moreCount}</Text>
-        </View>
-      ) : null}
-    </TouchableOpacity>
+    <Animated.View style={[style, entranceStyle]}>
+      <PressableScale style={styles.mediaTile} onPress={onPress} activeOpacity={0.88} pressedScale={0.985}>
+        {moment.mediaType === 'video' ? (
+          <VideoMomentContent uri={moment.uri} />
+        ) : (
+          <Image source={{ uri: moment.uri }} style={styles.mediaFill} resizeMode="cover" />
+        )}
+        {moreCount ? (
+          <View style={styles.moreOverlay}>
+            <Text style={styles.moreText}>+{moreCount}</Text>
+          </View>
+        ) : null}
+      </PressableScale>
+    </Animated.View>
   );
 }
 
@@ -198,7 +227,7 @@ function MemoryWall({ mediaItems, onOpenMedia }: MemoryWallProps) {
   if (visibleItems.length === 1) {
     return (
       <View style={styles.memorySingle}>
-        <MediaMomentTile moment={visibleItems[0]} onPress={() => onOpenMedia(0)} style={styles.singleTile} />
+        <MediaMomentTile moment={visibleItems[0]} onPress={() => onOpenMedia(0)} style={styles.singleTile} index={0} />
       </View>
     );
   }
@@ -212,6 +241,7 @@ function MemoryWall({ mediaItems, onOpenMedia }: MemoryWallProps) {
             moment={moment}
             onPress={() => onOpenMedia(i)}
             style={styles.pairTile}
+            index={i}
           />
         ))}
       </View>
@@ -221,7 +251,7 @@ function MemoryWall({ mediaItems, onOpenMedia }: MemoryWallProps) {
   if (visibleItems.length === 3) {
     return (
       <View style={styles.memoryCollage}>
-        <MediaMomentTile moment={visibleItems[0]} onPress={() => onOpenMedia(0)} style={styles.collageHeroTile} />
+        <MediaMomentTile moment={visibleItems[0]} onPress={() => onOpenMedia(0)} style={styles.collageHeroTile} index={0} />
         <View style={styles.collageSideColumn}>
           {visibleItems.slice(1).map((moment, i) => (
             <MediaMomentTile
@@ -229,6 +259,7 @@ function MemoryWall({ mediaItems, onOpenMedia }: MemoryWallProps) {
               moment={moment}
               onPress={() => onOpenMedia(i + 1)}
               style={styles.columnTile}
+              index={i + 1}
             />
           ))}
         </View>
@@ -238,7 +269,7 @@ function MemoryWall({ mediaItems, onOpenMedia }: MemoryWallProps) {
 
   return (
     <View style={styles.memoryCollage}>
-      <MediaMomentTile moment={visibleItems[0]} onPress={() => onOpenMedia(0)} style={styles.collageHeroTile} />
+      <MediaMomentTile moment={visibleItems[0]} onPress={() => onOpenMedia(0)} style={styles.collageHeroTile} index={0} />
       <View style={styles.collageSide}>
         {visibleItems.slice(1, 5).map((moment, i) => {
           const isLastVisible = i === visibleItems.slice(1, 5).length - 1;
@@ -251,6 +282,7 @@ function MemoryWall({ mediaItems, onOpenMedia }: MemoryWallProps) {
               onPress={() => onOpenMedia(openIndex)}
               style={styles.collageSmallTile}
               moreCount={isLastVisible ? moreCount : 0}
+              index={displayIndex}
             />
           );
         })}
@@ -386,15 +418,16 @@ function FullscreenMediaViewer({ mediaItems, selectedIndex, onClose, onSelectInd
                 </Text>
               </View>
             ) : null}
-            <TouchableOpacity
+            <PressableScale
               onPress={shareActiveMoment}
               disabled={!selectedMoment || isSharing}
               style={[styles.viewerShareBtn, (!selectedMoment || isSharing) && styles.viewerShareBtnDisabled]}
               activeOpacity={0.8}
+              pressedScale={0.97}
             >
               <Ionicons name="share-outline" size={18} color={Colors.text} />
               <Text style={styles.viewerShareText}>Share</Text>
-            </TouchableOpacity>
+            </PressableScale>
           </View>
 
           <View style={styles.viewerContent} {...panResponder.panHandlers}>
@@ -584,15 +617,16 @@ export default function RecapScreen() {
                 </Text>
               </View>
               {mediaItems.length > 0 ? (
-                <TouchableOpacity
+                <PressableScale
                   onPress={handleShareAllMemories}
                   disabled={isSharingAll}
                   style={[styles.shareAllBtn, isSharingAll && styles.shareAllBtnDisabled]}
                   activeOpacity={0.82}
+                  pressedScale={0.97}
                 >
                   <Ionicons name="share-social-outline" size={14} color={Colors.accent} />
                   <Text style={styles.shareAllText}>Share All</Text>
-                </TouchableOpacity>
+                </PressableScale>
               ) : null}
             </View>
           </View>
@@ -894,6 +928,7 @@ const styles = StyleSheet.create({
     minHeight: 136,
   },
   mediaTile: {
+    flex: 1,
     borderRadius: Radius.xl,
     overflow: 'hidden',
     backgroundColor: Colors.surface2,

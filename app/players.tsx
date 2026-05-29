@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
+import { PressableScale } from '@/components/ui/PressableScale';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { useSessionStore } from '@/store/session';
 
@@ -62,14 +63,15 @@ export default function PlayersScreen() {
           selectionColor={Colors.accent}
           autoFocus
         />
-        <TouchableOpacity
+        <PressableScale
           style={[styles.addBtn, !inputValue.trim() && styles.addBtnDisabled]}
           onPress={handleAdd}
           disabled={!inputValue.trim()}
           activeOpacity={0.8}
+          pressedScale={0.94}
         >
           <Ionicons name="add" size={24} color={inputValue.trim() ? '#0A0908' : Colors.textDim} />
-        </TouchableOpacity>
+        </PressableScale>
       </View>
 
       {/* Player list or ghost empty state */}
