@@ -24,6 +24,22 @@ function formatDuration(ms: number): string {
 
 type Award = { emoji: string; title: string; playerName: string; subtitle?: string };
 
+async function shareMediaMoment(moment: MediaMoment, dialogTitle: string) {
+  const isAvailable = await Sharing.isAvailableAsync();
+
+  if (!isAvailable) {
+    return 'unavailable';
+  }
+
+  await Sharing.shareAsync(moment.uri, {
+    dialogTitle,
+    mimeType: moment.mediaType === 'video' ? 'video/*' : 'image/*',
+    UTI: moment.mediaType === 'video' ? 'public.movie' : 'public.image',
+  });
+
+  return 'shared';
+}
+
 function computeAwards(players: Player[], played: PlayedCard[]): Award[] {
   if (!players.length || !played.length) return [];
 
@@ -337,19 +353,11 @@ function FullscreenMediaViewer({ mediaItems, selectedIndex, onClose, onSelectInd
 
     try {
       setIsSharing(true);
-      const isAvailable = await Sharing.isAvailableAsync();
+      const result = await shareMediaMoment(selectedMoment, 'Share NiteDeck moment');
 
-      if (!isAvailable) {
+      if (result === 'unavailable') {
         Alert.alert('Sharing unavailable', 'Sharing is not available on this device.');
-        return;
       }
-
-      // TODO: Future sharing polish can add Share All Memories and a branded recap poster.
-      await Sharing.shareAsync(selectedMoment.uri, {
-        dialogTitle: 'Share NiteDeck moment',
-        mimeType: selectedMoment.mediaType === 'video' ? 'video/*' : 'image/*',
-        UTI: selectedMoment.mediaType === 'video' ? 'public.movie' : 'public.image',
-      });
     } catch {
       Alert.alert('Share failed', 'This moment could not be shared. Try again from the recap.');
     } finally {
@@ -438,6 +446,7 @@ export default function RecapScreen() {
   const mediaMoments = useSessionStore(s => s.mediaMoments);
   const reset = useSessionStore(s => s.reset);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState<number | null>(null);
+  const [isSharingAll, setIsSharingAll] = useState(false);
 
   const duration = startedAt && endedAt ? endedAt - startedAt : 0;
   const totalCompleted = played.filter(p => !p.skipped).length;
@@ -466,6 +475,43 @@ export default function RecapScreen() {
   const handleBack = () => {
     reset();
     router.navigate('/');
+  };
+
+  const shareFirstMemory = async () => {
+    const firstMoment = mediaItems[0];
+    if (!firstMoment || isSharingAll) return;
+
+    try {
+      setIsSharingAll(true);
+      const result = await shareMediaMoment(firstMoment, 'Share NiteDeck memory');
+
+      if (result === 'unavailable') {
+        Alert.alert('Sharing unavailable', 'Sharing is not available on this device.');
+      }
+    } catch {
+      Alert.alert('Share failed', 'These memories could not be shared right now.');
+    } finally {
+      setIsSharingAll(false);
+    }
+  };
+
+  const handleShareAllMemories = () => {
+    if (mediaItems.length === 0 || isSharingAll) return;
+
+    if (mediaItems.length > 1) {
+      // TODO: Generate a branded NiteDeck recap poster so all memories can share as one image.
+      Alert.alert(
+        'Share Memories',
+        'This device can share one local NiteDeck file at a time. Share the first memory now, or open moments individually to share the rest.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Share First', onPress: () => { void shareFirstMemory(); } },
+        ],
+      );
+      return;
+    }
+
+    void shareFirstMemory();
   };
 
   const openMedia = (index: number) => {
@@ -523,18 +569,31 @@ export default function RecapScreen() {
 
         <View style={styles.memorySection}>
           <View style={styles.sectionRow}>
-            <View>
+            <View style={styles.sectionTitleWrap}>
               <Text style={[styles.sectionLabel, modeCfg && { color: modeCfg.primary }]}>MEMORY WALL</Text>
               <Text style={styles.sectionHint}>
                 {mediaItems.length > 0 ? 'The moments that made the night' : 'Ready for next time'}
               </Text>
             </View>
-            <View style={styles.mediaCountPill}>
-              <Text style={styles.mediaCountText}>
-                {mediaItems.length > 0
-                  ? `${mediaItems.length} moment${mediaItems.length !== 1 ? 's' : ''}`
-                  : 'EMPTY'}
-              </Text>
+            <View style={styles.sectionActions}>
+              <View style={styles.mediaCountPill}>
+                <Text style={styles.mediaCountText}>
+                  {mediaItems.length > 0
+                    ? `${mediaItems.length} moment${mediaItems.length !== 1 ? 's' : ''}`
+                    : 'EMPTY'}
+                </Text>
+              </View>
+              {mediaItems.length > 0 ? (
+                <TouchableOpacity
+                  onPress={handleShareAllMemories}
+                  disabled={isSharingAll}
+                  style={[styles.shareAllBtn, isSharingAll && styles.shareAllBtnDisabled]}
+                  activeOpacity={0.82}
+                >
+                  <Ionicons name="share-social-outline" size={14} color={Colors.accent} />
+                  <Text style={styles.shareAllText}>Share All</Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
 
@@ -735,10 +794,20 @@ const styles = StyleSheet.create({
   },
   sectionRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.md,
     marginBottom: Spacing.md,
+  },
+  sectionTitleWrap: {
+    flex: 1,
+  },
+  sectionActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    flexShrink: 0,
   },
   sectionLabel: {
     ...Typography.label,
@@ -763,6 +832,26 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: Colors.accent,
     letterSpacing: 0.4,
+  },
+  shareAllBtn: {
+    height: 32,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.accentBg,
+    borderWidth: 1,
+    borderColor: Colors.accentBorder,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  shareAllBtnDisabled: {
+    opacity: 0.55,
+  },
+  shareAllText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: Colors.accent,
+    letterSpacing: 0.3,
   },
   memorySingle: {
     minHeight: 300,
