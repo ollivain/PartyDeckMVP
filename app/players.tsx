@@ -34,7 +34,7 @@ export default function PlayersScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
-        <Text style={styles.stepLabel}>STEP 1 OF 2</Text>
+        <Text style={styles.stepLabel}>STEP 1 OF 3</Text>
       </View>
 
       <View style={styles.titleBlock}>

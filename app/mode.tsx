@@ -13,8 +13,8 @@ const MODES: Mode[] = ['chill', 'spicy', 'wild'];
 
 export default function ModeScreen() {
   const setMode = useSessionStore(s => s.setMode);
-  const startGame = useSessionStore(s => s.startGame);
-  const [selected, setSelected] = useState<Mode | null>(null);
+  const currentMode = useSessionStore(s => s.mode);
+  const [selected, setSelected] = useState<Mode | null>(currentMode);
 
   const handleSelect = (mode: Mode) => {
     setSelected(mode);
@@ -23,8 +23,7 @@ export default function ModeScreen() {
 
   const handleStart = () => {
     if (!selected) return;
-    startGame();
-    router.push('/game');
+    router.push('/rules');
   };
 
   return (
@@ -33,7 +32,7 @@ export default function ModeScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={8} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={20} color={Colors.textMuted} />
         </TouchableOpacity>
-        <Text style={styles.stepLabel}>STEP 2 OF 2</Text>
+        <Text style={styles.stepLabel}>STEP 2 OF 3</Text>
       </View>
 
       <View style={styles.titleBlock}>
@@ -57,7 +56,7 @@ export default function ModeScreen() {
 
       <View style={styles.footer}>
         <Button
-          label="Let's Play →"
+          label="Continue ->"
           onPress={handleStart}
           fullWidth
           disabled={!selected}

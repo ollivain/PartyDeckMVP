@@ -54,6 +54,7 @@ export default function CameraScreen() {
   const [zoom, setZoom] = useState(0);
   const [captureMode, setCaptureMode] = useState<CaptureMode>('photo');
   const [capturing, setCapturing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [preview, setPreview] = useState<MediaMoment | null>(null);
@@ -156,6 +157,8 @@ export default function CameraScreen() {
   };
 
   const handleSave = () => {
+    if (saving) return;
+    setSaving(true);
     if (preview) addMedia(preview.uri, preview.mediaType);
     router.back();
   };
@@ -259,7 +262,12 @@ export default function CameraScreen() {
             <Ionicons name="refresh" size={18} color={Colors.text} />
             <Text style={styles.retakeBtnText}>Retake</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+            onPress={handleSave}
+            activeOpacity={0.8}
+            disabled={saving}
+          >
             <Ionicons name="checkmark" size={20} color="#0A0908" />
             <Text style={styles.saveBtnText}>Save</Text>
           </TouchableOpacity>
@@ -550,6 +558,9 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: Radius.xl,
     backgroundColor: Colors.accent,
+  },
+  saveBtnDisabled: {
+    opacity: 0.55,
   },
   saveBtnText: {
     fontSize: 16,

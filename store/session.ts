@@ -54,6 +54,31 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
+function advanceCard(
+  state: Pick<SessionStore, 'deck' | 'deckIndex' | 'currentPlayerIndex' | 'players' | 'played'>,
+  skipped: boolean
+) {
+  const { deck, deckIndex, currentPlayerIndex, players, played } = state;
+  const cardId = deck[deckIndex];
+  const player = players.length > 0 ? players[currentPlayerIndex % players.length] : undefined;
+
+  if (!cardId || !player) return state;
+
+  return {
+    played: [
+      ...played,
+      {
+        cardId,
+        playerId: player.id,
+        skipped,
+        at: Date.now(),
+      },
+    ],
+    deckIndex: deckIndex + 1,
+    currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+  };
+}
+
 const defaultState = {
   players: [] as Player[],
   mode: null as Mode | null,
@@ -101,41 +126,9 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     });
   },
 
-  completeCard: () => {
-    const { deck, deckIndex, currentPlayerIndex, players, played } = get();
-    if (deckIndex >= deck.length || !players.length) return;
-    set({
-      played: [
-        ...played,
-        {
-          cardId: deck[deckIndex],
-          playerId: players[currentPlayerIndex].id,
-          skipped: false,
-          at: Date.now(),
-        },
-      ],
-      deckIndex: deckIndex + 1,
-      currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-    });
-  },
+  completeCard: () => set(s => advanceCard(s, false)),
 
-  skipCard: () => {
-    const { deck, deckIndex, currentPlayerIndex, players, played } = get();
-    if (deckIndex >= deck.length || !players.length) return;
-    set({
-      played: [
-        ...played,
-        {
-          cardId: deck[deckIndex],
-          playerId: players[currentPlayerIndex].id,
-          skipped: true,
-          at: Date.now(),
-        },
-      ],
-      deckIndex: deckIndex + 1,
-      currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
-    });
-  },
+  skipCard: () => set(s => advanceCard(s, true)),
 
   endGame: () => set({ endedAt: Date.now() }),
 
