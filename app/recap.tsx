@@ -1,6 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
-import { Alert, Image, Modal, PanResponder, ScrollView, StyleProp, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Image,
+  Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sharing from 'expo-sharing';
@@ -102,6 +117,7 @@ const HERO_SUBTITLES: Record<Mode, string> = {
   spicy: 'You brought the heat',
   wild: 'Chaos captured perfectly',
 };
+const FULLSCREEN_MEDIA_FIT = 'cover';
 
 type StatTileProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -326,17 +342,17 @@ function buildHighlight(mode: Mode | null, played: PlayedCard[], mediaItems: Med
 }
 
 function FullscreenVideo({ uri }: { uri: string }) {
-  const player = useVideoPlayer(uri, player => {
-    player.loop = false;
-    player.play();
+  const player = useVideoPlayer(uri, p => {
+    p.loop = false;
+    p.play();
   });
 
   return (
     <VideoView
       player={player}
       style={styles.fullscreenMedia}
-      nativeControls
-      contentFit="contain"
+      nativeControls={false}
+      contentFit={FULLSCREEN_MEDIA_FIT}
       surfaceType="textureView"
     />
   );
@@ -344,41 +360,66 @@ function FullscreenVideo({ uri }: { uri: string }) {
 
 type MediaViewerProps = {
   mediaItems: MediaMoment[];
+  isOpen: boolean;
   selectedIndex: number | null;
   onClose: () => void;
   onSelectIndex: (index: number) => void;
 };
 
-function FullscreenMediaViewer({ mediaItems, selectedIndex, onClose, onSelectIndex }: MediaViewerProps) {
+function FullscreenMediaViewer({ mediaItems, isOpen, selectedIndex, onClose, onSelectIndex }: MediaViewerProps) {
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const listRef = useRef<FlatList<MediaMoment>>(null);
+  const viewerWasClosedRef = useRef(true);
   const [isSharing, setIsSharing] = useState(false);
   const selectedMoment = selectedIndex === null ? null : mediaItems[selectedIndex];
-  const canGoPrev = selectedIndex !== null && selectedIndex > 0;
-  const canGoNext = selectedIndex !== null && selectedIndex < mediaItems.length - 1;
 
-  const goPrev = () => {
-    if (selectedIndex !== null && canGoPrev) {
-      onSelectIndex(selectedIndex - 1);
+  useEffect(() => {
+    if (!isOpen || selectedIndex === null || !selectedMoment) {
+      viewerWasClosedRef.current = true;
+      return;
+    }
+
+    if (!viewerWasClosedRef.current) return;
+
+    viewerWasClosedRef.current = false;
+
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToIndex({ index: selectedIndex, animated: false });
+    });
+  }, [isOpen, selectedIndex, selectedMoment]);
+
+  const handleMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (!isOpen) return;
+
+    const nextIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+    const boundedIndex = Math.max(0, Math.min(mediaItems.length - 1, nextIndex));
+
+    if (boundedIndex !== selectedIndex) {
+      onSelectIndex(boundedIndex);
     }
   };
 
-  const goNext = () => {
-    if (selectedIndex !== null && canGoNext) {
-      onSelectIndex(selectedIndex + 1);
-    }
-  };
-
-  const panResponder = PanResponder.create({
-    onMoveShouldSetPanResponder: (_, gestureState) =>
-      Math.abs(gestureState.dx) > 24 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.4,
-    onPanResponderRelease: (_, gestureState) => {
-      if (gestureState.dx <= -56) {
-        goNext();
-      } else if (gestureState.dx >= 56) {
-        goPrev();
-      }
-    },
-  });
+  const renderMediaPage = ({ item, index }: { item: MediaMoment; index: number }) => (
+    <View style={[styles.viewerPage, { width }]}>
+      {item.mediaType === 'photo' ? (
+        <Image
+          source={{ uri: item.uri }}
+          style={styles.fullscreenMedia}
+          resizeMode={FULLSCREEN_MEDIA_FIT}
+        />
+      ) : index === selectedIndex ? (
+        <FullscreenVideo key={item.uri} uri={item.uri} />
+      ) : (
+        <View style={styles.inactiveVideoPage}>
+          <View style={styles.inactiveVideoBadge}>
+            <Ionicons name="play" size={22} color="#0A0908" />
+          </View>
+          <Text style={styles.inactiveVideoText}>VIDEO</Text>
+        </View>
+      )}
+    </View>
+  );
 
   const shareActiveMoment = async () => {
     if (!selectedMoment || isSharing) return;
@@ -399,71 +440,63 @@ function FullscreenMediaViewer({ mediaItems, selectedIndex, onClose, onSelectInd
 
   return (
     <Modal
-      visible={Boolean(selectedMoment)}
+      visible={isOpen && Boolean(selectedMoment)}
       transparent
       animationType="fade"
       statusBarTranslucent
       onRequestClose={onClose}
     >
       <View style={styles.viewerBackdrop}>
-        <SafeAreaView style={styles.viewerSafe}>
-          <View style={[styles.viewerTopBar, { paddingTop: Math.max(insets.top + Spacing.sm, Spacing.xl) }]}>
-            <TouchableOpacity onPress={onClose} style={styles.viewerCloseBtn} activeOpacity={0.8}>
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
-            {selectedMoment && selectedIndex !== null ? (
-              <View style={styles.viewerCounterPill}>
-                <Text style={styles.viewerCounterText}>
-                  {selectedIndex + 1} / {mediaItems.length}
-                </Text>
-              </View>
-            ) : null}
-            <PressableScale
-              onPress={shareActiveMoment}
-              disabled={!selectedMoment || isSharing}
-              style={[styles.viewerShareBtn, (!selectedMoment || isSharing) && styles.viewerShareBtnDisabled]}
-              activeOpacity={0.8}
-              pressedScale={0.97}
-            >
-              <Ionicons name="share-outline" size={18} color={Colors.text} />
-              <Text style={styles.viewerShareText}>Share</Text>
-            </PressableScale>
+        <View style={styles.viewerSafe}>
+          <View style={styles.viewerContent}>
+            <FlatList
+              ref={listRef}
+              data={mediaItems}
+              keyExtractor={(item, index) => `${item.uri}-${index}`}
+              renderItem={renderMediaPage}
+              horizontal
+              pagingEnabled
+              initialScrollIndex={selectedIndex ?? 0}
+              getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+              onMomentumScrollEnd={handleMomentumEnd}
+              showsHorizontalScrollIndicator={false}
+              bounces={false}
+              decelerationRate="fast"
+              scrollEventThrottle={16}
+              extraData={selectedIndex}
+              onScrollToIndexFailed={({ index }) => {
+                requestAnimationFrame(() => {
+                  listRef.current?.scrollToIndex({ index, animated: false });
+                });
+              }}
+            />
           </View>
 
-          <View style={styles.viewerContent} {...panResponder.panHandlers}>
-            {selectedMoment?.mediaType === 'photo' ? (
-              <Image
-                key={selectedMoment.uri}
-                source={{ uri: selectedMoment.uri }}
-                style={styles.fullscreenMedia}
-                resizeMode="contain"
-              />
-            ) : selectedMoment?.mediaType === 'video' ? (
-              <FullscreenVideo key={selectedMoment.uri} uri={selectedMoment.uri} />
-            ) : null}
-
-            {mediaItems.length > 1 ? (
-              <>
-                <TouchableOpacity
-                  onPress={goPrev}
-                  disabled={!canGoPrev}
-                  style={[styles.viewerNavBtn, styles.viewerNavLeft, !canGoPrev && styles.viewerNavBtnDisabled]}
-                  activeOpacity={0.75}
-                >
-                  <Ionicons name="chevron-back" size={28} color={Colors.text} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={goNext}
-                  disabled={!canGoNext}
-                  style={[styles.viewerNavBtn, styles.viewerNavRight, !canGoNext && styles.viewerNavBtnDisabled]}
-                  activeOpacity={0.75}
-                >
-                  <Ionicons name="chevron-forward" size={28} color={Colors.text} />
-                </TouchableOpacity>
-              </>
-            ) : null}
-          </View>
-        </SafeAreaView>
+          <SafeAreaView pointerEvents="box-none" style={styles.viewerControlOverlay}>
+            <View style={[styles.viewerTopBar, { paddingTop: Math.max(insets.top + Spacing.sm, Spacing.xl) }]} pointerEvents="box-none">
+              <TouchableOpacity onPress={onClose} style={styles.viewerCloseBtn} activeOpacity={0.8}>
+                <Ionicons name="close" size={24} color={Colors.text} />
+              </TouchableOpacity>
+              {selectedMoment && selectedIndex !== null ? (
+                <View style={styles.viewerCounterPill}>
+                  <Text style={styles.viewerCounterText}>
+                    {selectedIndex + 1} / {mediaItems.length}
+                  </Text>
+                </View>
+              ) : null}
+              <PressableScale
+                onPress={shareActiveMoment}
+                disabled={!selectedMoment || isSharing}
+                style={[styles.viewerShareBtn, (!selectedMoment || isSharing) && styles.viewerShareBtnDisabled]}
+                activeOpacity={0.8}
+                pressedScale={0.97}
+              >
+                <Ionicons name="share-outline" size={18} color={Colors.text} />
+                <Text style={styles.viewerShareText}>Share</Text>
+              </PressableScale>
+            </View>
+          </SafeAreaView>
+        </View>
       </View>
     </Modal>
   );
@@ -478,6 +511,7 @@ export default function RecapScreen() {
   const mediaUris = useSessionStore(s => s.mediaUris);
   const mediaMoments = useSessionStore(s => s.mediaMoments);
   const reset = useSessionStore(s => s.reset);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState<number | null>(null);
   const [isSharingAll, setIsSharingAll] = useState(false);
 
@@ -550,10 +584,14 @@ export default function RecapScreen() {
   const openMedia = (index: number) => {
     if (index >= 0 && index < mediaItems.length) {
       setSelectedMediaIndex(index);
+      setIsViewerOpen(true);
     }
   };
 
-  const closeMedia = () => setSelectedMediaIndex(null);
+  const closeMedia = () => {
+    setIsViewerOpen(false);
+    setSelectedMediaIndex(null);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -691,6 +729,7 @@ export default function RecapScreen() {
       </ScrollView>
       <FullscreenMediaViewer
         mediaItems={mediaItems}
+        isOpen={isViewerOpen}
         selectedIndex={selectedMediaIndex}
         onClose={closeMedia}
         onSelectIndex={setSelectedMediaIndex}
@@ -1108,6 +1147,10 @@ const styles = StyleSheet.create({
   viewerSafe: {
     flex: 1,
   },
+  viewerControlOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 2,
+  },
   viewerTopBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1163,34 +1206,36 @@ const styles = StyleSheet.create({
   },
   viewerContent: {
     flex: 1,
-    paddingHorizontal: Spacing.sm,
-    paddingBottom: Spacing.lg,
+  },
+  viewerPage: {
+    flex: 1,
+    backgroundColor: '#000',
   },
   fullscreenMedia: {
     flex: 1,
     width: '100%',
     height: '100%',
   },
-  viewerNavBtn: {
-    position: 'absolute',
-    top: '44%',
-    width: 48,
-    height: 64,
+  inactiveVideoPage: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    backgroundColor: '#000',
+  },
+  inactiveVideoBadge: {
+    width: 58,
+    height: 58,
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(0,0,0,0.34)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: Colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  viewerNavLeft: {
-    left: Spacing.sm,
-  },
-  viewerNavRight: {
-    right: Spacing.sm,
-  },
-  viewerNavBtnDisabled: {
-    opacity: 0.22,
+  inactiveVideoText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: Colors.accent,
+    letterSpacing: 1.2,
   },
   footer: {
     marginTop: Spacing.xl,

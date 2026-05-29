@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { CameraType, FlashMode, VideoCodec, VideoQuality } from 'expo-camera';
@@ -48,6 +48,7 @@ function VideoPreview({ uri }: { uri: string }) {
 }
 
 export default function CameraScreen() {
+  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [flash, setFlash] = useState<FlashMode>('off');
@@ -245,7 +246,7 @@ export default function CameraScreen() {
         )}
 
         {/* Top bar with close + label */}
-        <SafeAreaView style={styles.topBar} edges={['top']}>
+        <SafeAreaView style={[styles.topBar, { paddingTop: Math.max(insets.top + Spacing.sm, Spacing.xl) }]} edges={['top']}>
           <TouchableOpacity onPress={() => router.back()} style={styles.topBtn} activeOpacity={0.8}>
             <Ionicons name="close" size={22} color="#fff" />
           </TouchableOpacity>
@@ -501,7 +502,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
   },
   topBtn: {
     width: 44,
