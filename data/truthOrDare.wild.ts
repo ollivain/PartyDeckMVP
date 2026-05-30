@@ -6,7 +6,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is the most chaotic decision you ever made that somehow turned out completely fine?',
+    text: 'What\'s one lie you\'ve told this group and never corrected?',
     intensity: 3,
   },
   {
@@ -14,7 +14,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'Who here would survive best if tonight suddenly turned into a reality TV competition?',
+    text: 'What\'s the most chaotic version of you that this group hasn\'t met yet?',
     intensity: 3,
   },
   {
@@ -22,7 +22,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is one rule you would add right now to make this room significantly more ridiculous?',
+    text: 'Admit something you pretend not to care about but absolutely do.',
     intensity: 3,
   },
   {
@@ -30,7 +30,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is the most ridiculous argument you have ever won completely by accident?',
+    text: 'If the group had to vote you out right now, what would they use against you?',
     intensity: 3,
   },
   {
@@ -38,7 +38,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'Who here is most likely to accidentally start a tradition the whole group ends up keeping?',
+    text: 'Name the most questionable reason you\'ve cancelled on someone recently.',
     intensity: 3,
   },
   {
@@ -46,7 +46,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is the most dramatic reaction you have ever had to something that did not deserve it?',
+    text: 'Confess something you did this week that you\'re hoping this group never asks about.',
     intensity: 3,
   },
   {
@@ -54,7 +54,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What would your entrance song be if you had to walk into every room tonight with full drama?',
+    text: 'Spill a secret opinion you have about someone in this room.',
     intensity: 3,
   },
   {
@@ -62,7 +62,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is the strangest hill you are completely prepared to defend for thirty seconds right now?',
+    text: 'Name something you deleted from your phone because you knew it looked bad.',
     intensity: 3,
   },
   {
@@ -70,7 +70,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'If you had to bet on one person here to cause the most harmless chaos tonight, who is it and why?',
+    text: 'What\'s a message you\'d panic if this group saw right now?',
     intensity: 3,
   },
   {
@@ -78,7 +78,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is something completely harmless that immediately makes you suspicious of anyone who does it?',
+    text: 'What\'s something about yourself you\'ve been called out for but won\'t change?',
     intensity: 3,
   },
   {
@@ -86,7 +86,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'For this entire round, announce every card like a sports commentator calling a game-winning play.',
+    text: 'For this whole round, announce every card like a sports commentator.',
     intensity: 3,
   },
   {
@@ -94,7 +94,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'Create a three-second victory dance right now and make the whole group learn it.',
+    text: 'Teach the group a victory dance right now. They have to copy it.',
     intensity: 3,
   },
   {
@@ -102,7 +102,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'The group picks one sound effect you must make exactly once before your next turn.',
+    text: 'Open your camera roll. Pick any photo. The group creates the fake headline.',
     intensity: 3,
   },
   {
@@ -110,7 +110,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'Give a full campaign speech for why you should be trusted to run the rest of this game.',
+    text: 'Give a quick campaign speech for why you should be running this game.',
     intensity: 3,
   },
   {
@@ -118,7 +118,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'Stand up, switch seats with someone, then give a serious strategic explanation for the move.',
+    text: 'Film a 10-second breaking news report about something that just happened in this room.',
     intensity: 3,
   },
   {
@@ -126,7 +126,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'Invent a harmless house rule on the spot that applies to everyone until your next turn.',
+    text: 'Show your last three emojis. The group guesses what your week looked like.',
     intensity: 3,
   },
   {
@@ -134,7 +134,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'Strike your best freeze-frame pose and hold it until every player in the group has copied it.',
+    text: 'Show your last played song. No defending yourself until the group reacts.',
     intensity: 3,
   },
   {
@@ -142,7 +142,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'Narrate everything that happens in the next twenty seconds like a nature documentary about humans.',
+    text: 'Narrate whatever happens next in this room like a nature documentary.',
     intensity: 3,
   },
   {
@@ -150,7 +150,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'Give everyone in the group a secret agent code name and announce them one by one with full confidence.',
+    text: 'Show the title of your most recent note or reminder.',
     intensity: 3,
   },
   {
@@ -158,7 +158,7 @@ export const wildTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'wild',
     choice: 'dare',
     label: 'DARE',
-    text: 'The group votes on who is most likely to become tonight\'s villain. That person has thirty seconds to defend themselves.',
+    text: 'Show your most recent screenshot. Explain what it is.',
     intensity: 3,
   },
 ];
