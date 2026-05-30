@@ -1,5 +1,6 @@
 export type GameType = 'classic' | 'truth-or-dare';
 export type Mode = 'chill' | 'spicy' | 'wild';
+export type TruthOrDareChoice = 'truth' | 'dare';
 export type PackId =
   | 'temptations'
   | 'roast'
@@ -34,6 +35,15 @@ export type Card = {
   mode: Mode;
   type: CardType;
   label: string;
+  text: string;
+  intensity?: CardIntensity;
+};
+
+export type TruthOrDareCard = {
+  id: string;
+  mode: Mode;
+  choice: TruthOrDareChoice;
+  label: 'TRUTH' | 'DARE';
   text: string;
   intensity?: CardIntensity;
 };

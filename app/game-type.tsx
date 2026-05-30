@@ -28,7 +28,6 @@ const GAME_OPTIONS: GameOption[] = [
     title: 'Truth or Dare',
     description: 'Pick Truth or Dare each turn. Chill, Spicy or Wild.',
     icon: 'help-buoy',
-    comingSoon: true,
   },
 ];
 
@@ -36,8 +35,6 @@ export default function GameTypeScreen() {
   const setGameType = useSessionStore(s => s.setGameType);
 
   const handleSelect = (gameType: GameType) => {
-    if (gameType !== 'classic') return;
-
     setGameType(gameType);
     router.push('/players');
   };
@@ -56,7 +53,7 @@ export default function GameTypeScreen() {
           <Text style={{ color: Colors.text }}>Choose your </Text>
           <Text style={{ color: Colors.accent }}>game</Text>
         </Text>
-        <Text style={styles.subtitle}>Start with the original NiteDeck, with more games coming soon.</Text>
+        <Text style={styles.subtitle}>Pick the original group deck or a round of Truth or Dare.</Text>
       </View>
 
       <View style={styles.optionList}>
@@ -100,17 +97,17 @@ export default function GameTypeScreen() {
                 </View>
                 <Text style={styles.optionDescription}>{option.description}</Text>
                 {isClassic ? (
-                  <Text style={styles.optionMeta}>Current full game</Text>
+                  <Text style={styles.optionMeta}>Original NiteDeck flow</Text>
                 ) : (
-                  <Text style={styles.optionMeta}>Not playable in this build</Text>
+                  <Text style={styles.optionMeta}>New MVP mode</Text>
                 )}
               </View>
 
               <View style={styles.rightIcon}>
                 <Ionicons
-                  name={isClassic ? 'chevron-forward' : 'lock-closed-outline'}
+                  name="chevron-forward"
                   size={20}
-                  color={isClassic ? Colors.accent : Colors.textDim}
+                  color={isClassic ? Colors.accent : Colors.textMuted}
                 />
               </View>
             </PressableScale>

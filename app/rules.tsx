@@ -43,7 +43,7 @@ export default function RulesScreen() {
   }, [gameType, hasEnoughPlayers, mode]);
 
   const handleStart = () => {
-    if (startLockRef.current || gameType !== 'classic' || !hasEnoughPlayers || !mode) return;
+    if (startLockRef.current || !gameType || !hasEnoughPlayers || !mode) return;
 
     startLockRef.current = true;
     setIsStarting(true);
@@ -55,7 +55,7 @@ export default function RulesScreen() {
       return;
     }
 
-    router.push('/game');
+    router.push(gameType === 'classic' ? '/game' : '/truth-or-dare');
   };
 
   if (!gameType) {
@@ -102,10 +102,10 @@ export default function RulesScreen() {
 
       <View style={styles.footer}>
         <Button
-          label={gameType === 'classic' ? 'Start the night' : 'Coming soon'}
+          label="Start the night"
           onPress={handleStart}
           fullWidth
-          disabled={gameType !== 'classic' || !hasEnoughPlayers || !mode || isStarting}
+          disabled={!gameType || !hasEnoughPlayers || !mode || isStarting}
         />
         <Button label="Back" onPress={() => router.back()} variant="ghost" fullWidth />
       </View>

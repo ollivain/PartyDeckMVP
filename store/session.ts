@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { allCards } from '@/data/cards';
-import type { GameType, Mode } from '@/data/types';
+import { truthOrDareCards } from '@/data/truthOrDare';
+import type { GameType, Mode, TruthOrDareChoice } from '@/data/types';
 
 export type Player = {
   id: string;
@@ -31,6 +32,12 @@ type SessionStore = {
   currentPlayerIndex: number;
   deck: string[];
   deckIndex: number;
+  truthOrDareTruthDeck: string[];
+  truthOrDareDareDeck: string[];
+  truthOrDareTruthIndex: number;
+  truthOrDareDareIndex: number;
+  pendingTruthOrDareChoice: TruthOrDareChoice | null;
+  pendingTruthOrDareCardId: string | null;
   played: PlayedCard[];
   mediaUris: string[];
   mediaMoments: MediaMoment[];
@@ -40,6 +47,9 @@ type SessionStore = {
   setGameType: (gameType: GameType) => void;
   setMode: (mode: Mode) => void;
   startGame: () => boolean;
+  chooseTruthOrDareCard: (choice: TruthOrDareChoice) => boolean;
+  completeTruthOrDareCard: () => void;
+  skipTruthOrDareCard: () => void;
   completeCard: () => void;
   skipCard: () => void;
   endGame: () => void;
@@ -81,6 +91,52 @@ function advanceCard(
   };
 }
 
+function advanceTruthOrDareCard(
+  state: Pick<
+    SessionStore,
+    | 'currentPlayerIndex'
+    | 'pendingTruthOrDareCardId'
+    | 'pendingTruthOrDareChoice'
+    | 'played'
+    | 'players'
+    | 'truthOrDareDareIndex'
+    | 'truthOrDareTruthIndex'
+  >,
+  skipped: boolean
+) {
+  const {
+    currentPlayerIndex,
+    pendingTruthOrDareCardId,
+    pendingTruthOrDareChoice,
+    played,
+    players,
+    truthOrDareDareIndex,
+    truthOrDareTruthIndex,
+  } = state;
+  const player = players.length > 0 ? players[currentPlayerIndex % players.length] : undefined;
+
+  if (!pendingTruthOrDareCardId || !pendingTruthOrDareChoice || !player) return state;
+
+  return {
+    played: [
+      ...played,
+      {
+        cardId: pendingTruthOrDareCardId,
+        playerId: player.id,
+        skipped,
+        at: Date.now(),
+      },
+    ],
+    currentPlayerIndex: (currentPlayerIndex + 1) % players.length,
+    truthOrDareTruthIndex:
+      pendingTruthOrDareChoice === 'truth' ? truthOrDareTruthIndex + 1 : truthOrDareTruthIndex,
+    truthOrDareDareIndex:
+      pendingTruthOrDareChoice === 'dare' ? truthOrDareDareIndex + 1 : truthOrDareDareIndex,
+    pendingTruthOrDareChoice: null,
+    pendingTruthOrDareCardId: null,
+  };
+}
+
 const defaultState = {
   players: [] as Player[],
   gameType: null as GameType | null,
@@ -90,6 +146,12 @@ const defaultState = {
   currentPlayerIndex: 0,
   deck: [] as string[],
   deckIndex: 0,
+  truthOrDareTruthDeck: [] as string[],
+  truthOrDareDareDeck: [] as string[],
+  truthOrDareTruthIndex: 0,
+  truthOrDareDareIndex: 0,
+  pendingTruthOrDareChoice: null as TruthOrDareChoice | null,
+  pendingTruthOrDareCardId: null as string | null,
   played: [] as PlayedCard[],
   mediaUris: [] as string[],
   mediaMoments: [] as MediaMoment[],
@@ -118,13 +180,49 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
 
   startGame: () => {
     const { gameType, mode, players } = get();
-    if (gameType !== 'classic' || !mode || players.length < 2) return false;
+    if (!mode || players.length < 2) return false;
+
+    if (gameType === 'truth-or-dare') {
+      const truthDeck = shuffleArray(
+        truthOrDareCards.filter(c => c.mode === mode && c.choice === 'truth')
+      ).map(c => c.id);
+      const dareDeck = shuffleArray(
+        truthOrDareCards.filter(c => c.mode === mode && c.choice === 'dare')
+      ).map(c => c.id);
+
+      if (truthDeck.length === 0 || dareDeck.length === 0) return false;
+
+      set({
+        deck: [],
+        deckIndex: 0,
+        truthOrDareTruthDeck: truthDeck,
+        truthOrDareDareDeck: dareDeck,
+        truthOrDareTruthIndex: 0,
+        truthOrDareDareIndex: 0,
+        pendingTruthOrDareChoice: null,
+        pendingTruthOrDareCardId: null,
+        currentPlayerIndex: 0,
+        played: [],
+        startedAt: Date.now(),
+        endedAt: null,
+      });
+      return true;
+    }
+
+    if (gameType !== 'classic') return false;
+
     const modeCards = allCards.filter(c => c.mode === mode);
     if (modeCards.length === 0) return false;
     const deck = shuffleArray(modeCards).map(c => c.id);
     set({
       deck,
       deckIndex: 0,
+      truthOrDareTruthDeck: [],
+      truthOrDareDareDeck: [],
+      truthOrDareTruthIndex: 0,
+      truthOrDareDareIndex: 0,
+      pendingTruthOrDareChoice: null,
+      pendingTruthOrDareCardId: null,
       currentPlayerIndex: 0,
       played: [],
       startedAt: Date.now(),
@@ -132,6 +230,29 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     });
     return true;
   },
+
+  chooseTruthOrDareCard: (choice: TruthOrDareChoice) => {
+    const state = get();
+    if (state.gameType !== 'truth-or-dare' || !state.startedAt || state.pendingTruthOrDareCardId) {
+      return false;
+    }
+
+    const deck = choice === 'truth' ? state.truthOrDareTruthDeck : state.truthOrDareDareDeck;
+    const index = choice === 'truth' ? state.truthOrDareTruthIndex : state.truthOrDareDareIndex;
+    const cardId = deck[index];
+
+    if (!cardId) return false;
+
+    set({
+      pendingTruthOrDareChoice: choice,
+      pendingTruthOrDareCardId: cardId,
+    });
+    return true;
+  },
+
+  completeTruthOrDareCard: () => set(s => advanceTruthOrDareCard(s, false)),
+
+  skipTruthOrDareCard: () => set(s => advanceTruthOrDareCard(s, true)),
 
   completeCard: () => set(s => advanceCard(s, false)),
 
