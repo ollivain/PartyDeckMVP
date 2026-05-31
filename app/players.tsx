@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,10 +9,18 @@ import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { useSessionStore } from '@/store/session';
 
 const GHOST_WIDTHS = [62, 45, 55] as const;
+const MAX_PLAYERS = 10;
+const ADD_PRESS_LOCK_MS = 250;
+const ADD_TO_CONTINUE_GUARD_MS = 250;
 
 export default function PlayersScreen() {
   const [inputValue, setInputValue] = useState('');
   const [inputFocused, setInputFocused] = useState(false);
+  const [isContinuing, setIsContinuing] = useState(false);
+  const addLockRef = useRef(false);
+  const addLockTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const continueLockRef = useRef(false);
+  const lastAddAtRef = useRef(0);
   const players = useSessionStore(s => s.players);
   const gameType = useSessionStore(s => s.gameType);
   const addPlayer = useSessionStore(s => s.addPlayer);
@@ -24,17 +32,52 @@ export default function PlayersScreen() {
     }
   }, [gameType]);
 
+  useEffect(() => {
+    return () => {
+      if (addLockTimerRef.current) {
+        clearTimeout(addLockTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleAdd = () => {
-    if (!inputValue.trim()) return;
-    if (players.length >= 10) {
+    if (addLockRef.current) return;
+
+    const trimmedName = inputValue.trim();
+    if (!trimmedName) return;
+
+    if (players.length >= MAX_PLAYERS) {
       Alert.alert('Max players', 'You can have up to 10 players.');
       return;
     }
-    addPlayer(inputValue);
+
+    addLockRef.current = true;
+    lastAddAtRef.current = Date.now();
     setInputValue('');
+    addPlayer(trimmedName);
+
+    if (addLockTimerRef.current) {
+      clearTimeout(addLockTimerRef.current);
+    }
+    addLockTimerRef.current = setTimeout(() => {
+      addLockRef.current = false;
+      addLockTimerRef.current = null;
+    }, ADD_PRESS_LOCK_MS);
   };
 
   const canContinue = players.length >= 2;
+  const trimmedInputValue = inputValue.trim();
+  const isAtMaxPlayers = players.length >= MAX_PLAYERS;
+  const canAddPlayer = Boolean(trimmedInputValue) && !isAtMaxPlayers;
+
+  const handleContinue = () => {
+    if (!canContinue || isContinuing || continueLockRef.current) return;
+    if (Date.now() - lastAddAtRef.current < ADD_TO_CONTINUE_GUARD_MS) return;
+
+    continueLockRef.current = true;
+    setIsContinuing(true);
+    router.push('/mode');
+  };
 
   if (!gameType) {
     return null;
@@ -75,13 +118,13 @@ export default function PlayersScreen() {
           autoFocus
         />
         <PressableScale
-          style={[styles.addBtn, !inputValue.trim() && styles.addBtnDisabled]}
+          style={[styles.addBtn, !canAddPlayer && styles.addBtnDisabled]}
           onPress={handleAdd}
-          disabled={!inputValue.trim()}
+          disabled={!canAddPlayer}
           activeOpacity={0.8}
           pressedScale={0.94}
         >
-          <Ionicons name="add" size={24} color={inputValue.trim() ? '#0A0908' : Colors.textDim} />
+          <Ionicons name="add" size={24} color={canAddPlayer ? '#0A0908' : Colors.textDim} />
         </PressableScale>
       </View>
 
@@ -123,9 +166,9 @@ export default function PlayersScreen() {
       <View style={styles.footer}>
         <Button
           label={!canContinue ? `Need ${2 - players.length} more player${players.length === 1 ? '' : 's'}` : 'Continue →'}
-          onPress={() => router.push('/mode')}
+          onPress={handleContinue}
           fullWidth
-          disabled={!canContinue}
+          disabled={!canContinue || isContinuing}
         />
       </View>
     </Screen>
