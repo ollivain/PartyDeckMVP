@@ -6,7 +6,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What was your first impression of someone here that turned out to be completely wrong?',
+    text: 'Admit what your actual first impression of this group was. No softening it.',
     intensity: 2,
   },
   {
@@ -14,7 +14,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is something you are better at pretending does not bother you than it actually does?',
+    text: 'Admit something that bothers you more than you let on.',
     intensity: 2,
   },
   {
@@ -22,7 +22,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is something you genuinely believe but would never post about publicly?',
+    text: 'Spill a take you\'d stand behind but would never post publicly.',
     intensity: 2,
   },
   {
@@ -30,7 +30,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is a call you made recently that you are still not a hundred percent sure was right?',
+    text: 'Name a red flag you have that you can actually admit out loud.',
     intensity: 2,
   },
   {
@@ -38,7 +38,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is one opinion you have that this group might disagree with?',
+    text: 'Name one opinion this group will probably push back on.',
     intensity: 2,
   },
   {
@@ -46,7 +46,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is a text you have typed and then decided not to send?',
+    text: 'Describe the last text you typed out, stared at, and deleted.',
     intensity: 2,
   },
   {
@@ -54,7 +54,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is something people consistently misunderstand about you that you have stopped trying to correct?',
+    text: 'What do people get wrong about you most often?',
     intensity: 2,
   },
   {
@@ -62,7 +62,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is the most impulsive decision you have made that you would make again in a heartbeat?',
+    text: 'Most impulsive thing you\'ve done. Would you do it again?',
     intensity: 2,
   },
   {
@@ -70,7 +70,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is something you are quietly proud of that almost no one in this group knows?',
+    text: 'Admit something you\'ve quietly pulled off that no one here knows.',
     intensity: 2,
   },
   {
@@ -78,7 +78,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is the boldest thing you have done this year that you have not really talked about yet?',
+    text: 'What\'s on your camera roll right now that would need some explaining?',
     intensity: 2,
   },
   {
@@ -86,7 +86,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Let the group ask you one follow-up question to any answer you gave tonight.',
+    text: 'Open your camera roll. Show a recent photo. The group invents what was happening.',
     intensity: 2,
   },
   {
@@ -94,7 +94,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Give a dramatic public apology for the last mildly annoying thing you did to someone here.',
+    text: 'Give someone here a public apology for the pettiest possible grievance.',
     intensity: 2,
   },
   {
@@ -102,7 +102,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Let the group vote on the one personality trait you are most instantly known for.',
+    text: 'Give someone here a compliment so specific it sounds like you\'ve been taking notes.',
     intensity: 2,
   },
   {
@@ -110,7 +110,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Give a dramatic recap of tonight so far like you are narrating a TV episode.',
+    text: 'Recap tonight as if you\'re pitching it as a reality TV episode.',
     intensity: 2,
   },
   {
@@ -118,7 +118,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Pick a player to give you a nickname you have to use when introducing yourself for one round.',
+    text: 'Show your most-used app this week and explain why.',
     intensity: 2,
   },
   {
@@ -126,7 +126,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Name one genuine thing each player here is underrated for.',
+    text: 'Show your lock screen and explain it.',
     intensity: 2,
   },
   {
@@ -134,7 +134,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Make eye contact with the player across from you and hold it for ten seconds — no laughing.',
+    text: 'Lock eyes with the player across from you. First to blink loses the round.',
     intensity: 2,
   },
   {
@@ -142,7 +142,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Give your best motivational speech to the player on your left in under thirty seconds.',
+    text: 'Deliver a pep talk to the player on your left. The group rates it out of ten.',
     intensity: 2,
   },
   {
@@ -150,7 +150,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Rank out loud: being late, cancelling last minute, leaving someone on read — most unforgivable first.',
+    text: 'Rank out loud: being late, cancelling last minute, leaving someone on read. Most unforgivable first.',
     intensity: 2,
   },
   {
@@ -158,7 +158,7 @@ export const spicyTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'spicy',
     choice: 'dare',
     label: 'DARE',
-    text: 'Choose a player to describe you in three words. You cannot react until they finish.',
+    text: 'Pick someone. They describe you in three words. You sit in silence until they finish.',
     intensity: 2,
   },
 ];

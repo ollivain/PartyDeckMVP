@@ -6,7 +6,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What show or movie could you start watching again tonight with zero hesitation?',
+    text: 'Name a show you\'d restart tonight with zero shame.',
     intensity: 1,
   },
   {
@@ -14,7 +14,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is something you own that is completely useless but impossible to throw away?',
+    text: 'What do you own that\'s completely useless but you\'d never get rid of?',
     intensity: 1,
   },
   {
@@ -22,7 +22,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is a song you pretend not to like but secretly know every single word to?',
+    text: 'Admit a song you secretly know every word to.',
     intensity: 1,
   },
   {
@@ -30,7 +30,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is the most unnecessary skill you are actually kind of proud of?',
+    text: 'What\'s your most useless talent? Prove it if you can.',
     intensity: 1,
   },
   {
@@ -38,7 +38,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What food do you eat in a way that would confuse most people if they saw it?',
+    text: 'Pick a food. Explain exactly how you eat it. Go.',
     intensity: 1,
   },
   {
@@ -46,7 +46,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is a harmless thing you are weirdly competitive about?',
+    text: 'What do you get weirdly competitive about that makes no sense?',
     intensity: 1,
   },
   {
@@ -54,7 +54,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is the nicest thing a stranger has ever unexpectedly done for you?',
+    text: 'What\'s something you recently looked up that you\'d rather not explain?',
     intensity: 1,
   },
   {
@@ -62,7 +62,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What fictional place would you visit for one weekend if you could?',
+    text: 'What\'s the weirdest thing you were actually proud of as a kid?',
     intensity: 1,
   },
   {
@@ -70,7 +70,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'What is one thing you keep saying you will do someday that you probably never will?',
+    text: 'What was your most embarrassing school era? One sentence.',
     intensity: 1,
   },
   {
@@ -78,7 +78,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'truth',
     label: 'TRUTH',
-    text: 'Who here would make the worst tour guide, but you would still go on the trip with them?',
+    text: 'Name something tiny that makes you unreasonably happy.',
     intensity: 1,
   },
   {
@@ -86,7 +86,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Give someone here a sincere one-sentence compliment.',
+    text: 'Give someone here a compliment so specific it catches them off guard.',
     intensity: 1,
   },
   {
@@ -102,7 +102,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Let the group choose a harmless nickname for you that sticks for this round.',
+    text: 'Give yourself a nickname for this round and defend why it fits.',
     intensity: 1,
   },
   {
@@ -110,7 +110,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Describe your day using only three dramatic words.',
+    text: 'Show your most recent emoji. The group guesses what conversation you were in.',
     intensity: 1,
   },
   {
@@ -118,7 +118,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Do your best impression of a celebrity placing a very complicated coffee order.',
+    text: 'Do your best impression of a celebrity ordering a complicated coffee.',
     intensity: 1,
   },
   {
@@ -126,7 +126,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Make up a five-second jingle about the last thing you ate.',
+    text: 'Show the last photo you took. Explain it as badly as possible.',
     intensity: 1,
   },
   {
@@ -134,7 +134,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Let the group pick one emoji that represents you tonight.',
+    text: 'Show a saved image from your phone. The group guesses why you kept it.',
     intensity: 1,
   },
   {
@@ -142,7 +142,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Without using any words, act out your current mood — group has thirty seconds to guess.',
+    text: 'Act out your current mood without words. Group has to guess.',
     intensity: 1,
   },
   {
@@ -150,7 +150,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Pick someone in the group who has to speak in a different accent until their next turn.',
+    text: 'Show your last played song. The group rates the vibe.',
     intensity: 1,
   },
   {
@@ -158,7 +158,7 @@ export const chillTruthOrDareCards: TruthOrDareCard[] = [
     mode: 'chill',
     choice: 'dare',
     label: 'DARE',
-    text: 'Give a toast to the group in one sentence — make it sound like the last line of a movie.',
+    text: 'Give the group a one-sentence toast. Make it sound like a movie ending.',
     intensity: 1,
   },
 ];
