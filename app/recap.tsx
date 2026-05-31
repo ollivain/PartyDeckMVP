@@ -536,14 +536,18 @@ export default function RecapScreen() {
     }))
     .sort((a, b) => b.completed - a.completed);
 
-  const handlePlayAgain = () => {
+  const returnHomeAfterReset = () => {
+    router.dismissAll();
     reset();
     router.replace('/');
   };
 
+  const handlePlayAgain = () => {
+    returnHomeAfterReset();
+  };
+
   const handleBack = () => {
-    reset();
-    router.navigate('/');
+    returnHomeAfterReset();
   };
 
   const shareFirstMemory = async () => {

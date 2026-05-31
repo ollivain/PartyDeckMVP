@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -61,7 +61,7 @@ export default function GameScreen() {
     ],
   }));
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (gameType !== 'classic') {
       router.replace('/game-type');
       return;
@@ -80,7 +80,7 @@ export default function GameScreen() {
     if (!hasStarted || deck.length === 0 || (!currentCard && !isDeckEmpty)) {
       router.replace('/rules');
     }
-  }, [currentCard, deck.length, gameType, hasEnoughPlayers, hasStarted, isDeckEmpty, mode]);
+  }, [currentCard, deck.length, gameType, hasEnoughPlayers, hasStarted, isDeckEmpty, mode]));
 
   const finishCardTransition = useCallback((action: CardAdvanceAction) => {
     if (action === 'done') {
@@ -155,7 +155,7 @@ export default function GameScreen() {
   };
 
   const handleCamera = () => {
-    router.push('/camera');
+    router.push({ pathname: '/camera', params: { returnTo: '/game' } });
   };
 
   if (invalidGameState) {

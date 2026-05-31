@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
@@ -101,7 +101,7 @@ export default function TruthOrDareScreen() {
   const modeCfg = mode ? Colors.modes[mode] : null;
   const progress = totalCards > 0 ? played.length / totalCards : 0;
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!gameType) {
       router.replace('/game-type');
       return;
@@ -125,7 +125,7 @@ export default function TruthOrDareScreen() {
     if (!hasStarted || totalCards === 0 || (pendingCardId !== null && !currentCard)) {
       router.replace('/rules');
     }
-  }, [currentCard, gameType, hasEnoughPlayers, hasStarted, mode, pendingCardId, totalCards]);
+  }, [currentCard, gameType, hasEnoughPlayers, hasStarted, mode, pendingCardId, totalCards]));
 
   const finishGame = () => {
     endGame();
@@ -162,6 +162,10 @@ export default function TruthOrDareScreen() {
     if (!didChoose) {
       Alert.alert('No cards left', `No ${choice} cards are left for this vibe.`);
     }
+  };
+
+  const handleCamera = () => {
+    router.push({ pathname: '/camera', params: { returnTo: '/truth-or-dare' } });
   };
 
   if (invalidGameState) {
@@ -270,6 +274,24 @@ export default function TruthOrDareScreen() {
             totalCards={totalCards}
           />
         ) : null}
+
+        <View style={styles.cameraRow}>
+          <PressableScale
+            onPress={handleCamera}
+            style={[
+              styles.cameraFab,
+              modeCfg && {
+                shadowColor: modeCfg.primary,
+                borderColor: modeCfg.border,
+              },
+            ]}
+            activeOpacity={0.75}
+            hitSlop={8}
+            pressedScale={0.94}
+          >
+            <Ionicons name="camera" size={22} color={Colors.text} />
+          </PressableScale>
+        </View>
 
         <View style={styles.actions}>
           {pendingCardId ? (
@@ -435,6 +457,28 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.lg,
     marginBottom: Spacing.sm,
+  },
+  cameraRow: {
+    alignSelf: 'flex-end',
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  cameraFab: {
+    width: 56,
+    height: 56,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    backgroundColor: Colors.surface2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 5,
   },
   cardTopRow: {
     flexDirection: 'row',

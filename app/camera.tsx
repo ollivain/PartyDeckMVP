@@ -10,7 +10,7 @@ import {
   type GestureResponderEvent,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -32,6 +32,12 @@ const VIDEO_QUALITY: VideoQuality = '1080p';
 const VIDEO_CODEC: VideoCodec = 'avc1';
 const FOCUS_RING_SIZE = 76;
 type CaptureMode = MediaType;
+type CameraReturnPath = '/game' | '/truth-or-dare';
+
+function resolveCameraReturnTo(returnTo: string | string[] | undefined): CameraReturnPath {
+  const candidate = Array.isArray(returnTo) ? returnTo[0] : returnTo;
+  return candidate === '/truth-or-dare' ? '/truth-or-dare' : '/game';
+}
 
 function VideoPreview({ uri }: { uri: string }) {
   const player = useVideoPlayer(uri, player => {
@@ -52,6 +58,7 @@ function VideoPreview({ uri }: { uri: string }) {
 
 export default function CameraScreen() {
   const insets = useSafeAreaInsets();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string | string[] }>();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [flash, setFlash] = useState<FlashMode>('off');
@@ -69,6 +76,7 @@ export default function CameraScreen() {
   const saveLockRef = useRef(false);
   const focusRingAnim = useRef(new Animated.Value(0)).current;
   const addMedia = useSessionStore(s => s.addMedia);
+  const returnPath = resolveCameraReturnTo(returnTo);
 
   // Refs for pinch — PanResponder closure can't see changing state
   const zoomRef = useRef(0);
@@ -169,7 +177,16 @@ export default function CameraScreen() {
     saveLockRef.current = true;
     setSaving(true);
     addMedia(preview.uri, preview.mediaType);
-    router.back();
+    handleReturn();
+  };
+
+  const handleReturn = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace(returnPath);
   };
 
   const toggleFacing = () => setFacing(f => (f === 'back' ? 'front' : 'back'));
@@ -218,7 +235,7 @@ export default function CameraScreen() {
   if (!permission.granted && !permission.canAskAgain) {
     return (
       <SafeAreaView style={styles.permBg}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.permBackBtn}>
+        <TouchableOpacity onPress={handleReturn} style={styles.permBackBtn}>
           <Ionicons name="close" size={22} color={Colors.textMuted} />
         </TouchableOpacity>
         <View style={styles.permContent}>
@@ -227,7 +244,7 @@ export default function CameraScreen() {
           <Text style={styles.permSub}>
             Go to Settings → NiteDeck and allow camera access to capture moments.
           </Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.permSkip}>
+          <TouchableOpacity onPress={handleReturn} style={styles.permSkip}>
             <Text style={styles.permSkipText}>Back to game</Text>
           </TouchableOpacity>
         </View>
@@ -239,7 +256,7 @@ export default function CameraScreen() {
   if (!permission.granted) {
     return (
       <SafeAreaView style={styles.permBg}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.permBackBtn}>
+        <TouchableOpacity onPress={handleReturn} style={styles.permBackBtn}>
           <Ionicons name="close" size={22} color={Colors.textMuted} />
         </TouchableOpacity>
         <View style={styles.permContent}>
@@ -253,7 +270,7 @@ export default function CameraScreen() {
           <TouchableOpacity style={styles.permBtn} onPress={requestPermission} activeOpacity={0.8}>
             <Text style={styles.permBtnText}>Allow Camera</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.back()} style={styles.permSkip}>
+          <TouchableOpacity onPress={handleReturn} style={styles.permSkip}>
             <Text style={styles.permSkipText}>Skip</Text>
           </TouchableOpacity>
         </View>
@@ -273,7 +290,7 @@ export default function CameraScreen() {
 
         {/* Top bar with close + label */}
         <SafeAreaView style={[styles.topBar, { paddingTop: Math.max(insets.top + Spacing.sm, Spacing.xl) }]} edges={['top']}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.topBtn} activeOpacity={0.8}>
+          <TouchableOpacity onPress={handleReturn} style={styles.topBtn} activeOpacity={0.8}>
             <Ionicons name="close" size={22} color="#fff" />
           </TouchableOpacity>
           <View style={styles.topLabel}>
@@ -463,7 +480,7 @@ export default function CameraScreen() {
         {/* Cancel — subtle, secondary */}
         <TouchableOpacity
           onPress={() => {
-            if (!recording) router.back();
+            if (!recording) handleReturn();
           }}
           style={styles.cancelRow}
           activeOpacity={0.6}

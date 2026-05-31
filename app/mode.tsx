@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +19,7 @@ export default function ModeScreen() {
   const [selected, setSelected] = useState<Mode | null>(currentMode);
   const canContinue = players.length >= 2;
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!gameType) {
       router.replace('/game-type');
       return;
@@ -28,7 +28,7 @@ export default function ModeScreen() {
     if (!canContinue) {
       router.replace('/players');
     }
-  }, [canContinue, gameType]);
+  }, [canContinue, gameType]));
 
   const handleSelect = (mode: Mode) => {
     setSelected(mode);

@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
@@ -26,11 +26,11 @@ export default function PlayersScreen() {
   const addPlayer = useSessionStore(s => s.addPlayer);
   const removePlayer = useSessionStore(s => s.removePlayer);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!gameType) {
       router.replace('/game-type');
     }
-  }, [gameType]);
+  }, [gameType]));
 
   useEffect(() => {
     return () => {

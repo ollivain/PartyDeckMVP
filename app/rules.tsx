@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/ui/Screen';
 import { Button } from '@/components/ui/Button';
@@ -26,7 +26,7 @@ export default function RulesScreen() {
   const hasEnoughPlayers = players.length >= 2;
   const modeCfg = mode ? Colors.modes[mode] : null;
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!gameType) {
       router.replace('/game-type');
       return;
@@ -40,7 +40,7 @@ export default function RulesScreen() {
     if (!mode) {
       router.replace('/mode');
     }
-  }, [gameType, hasEnoughPlayers, mode]);
+  }, [gameType, hasEnoughPlayers, mode]));
 
   const handleStart = () => {
     if (startLockRef.current || !gameType || !hasEnoughPlayers || !mode) return;
